@@ -4,30 +4,45 @@
       "model": "theprinter:block/the_printer",
       "y": 90
     },
-    "facing=east,on=true": {
+    "facing=east,on=true,printing=false": {
       "model": "theprinter:block/the_printer_on",
+      "y": 90
+    },
+    "facing=east,on=true,printing=true": {
+      "model": "theprinter:block/the_printer_printing",
       "y": 90
     },
     "facing=north,on=false": {
       "model": "theprinter:block/the_printer"
     },
-    "facing=north,on=true": {
+    "facing=north,on=true,printing=false": {
       "model": "theprinter:block/the_printer_on"
+    },
+    "facing=north,on=true,printing=true": {
+      "model": "theprinter:block/the_printer_printing"
     },
     "facing=south,on=false": {
       "model": "theprinter:block/the_printer",
       "y": 180
     },
-    "facing=south,on=true": {
+    "facing=south,on=true,printing=false": {
       "model": "theprinter:block/the_printer_on",
+      "y": 180
+    },
+    "facing=south,on=true,printing=true": {
+      "model": "theprinter:block/the_printer_printing",
       "y": 180
     },
     "facing=west,on=false": {
       "model": "theprinter:block/the_printer",
       "y": 270
     },
-    "facing=west,on=true": {
+    "facing=west,on=true,printing=false": {
       "model": "theprinter:block/the_printer_on",
+      "y": 270
+    },
+    "facing=west,on=true,printing=true": {
+      "model": "theprinter:block/the_printer_printing",
       "y": 270
     }
   }

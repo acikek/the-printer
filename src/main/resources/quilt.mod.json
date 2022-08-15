@@ -22,7 +22,8 @@
 		},
 		"intermediate_mappings": "net.fabricmc:intermediary",
 		"entrypoints": {
-			"init": "com.acikek.theprinter.ThePrinter"
+			"init": "com.acikek.theprinter.ThePrinter",
+			"client_init": "com.acikek.theprinter.client.ThePrinterClient"
 		},
 		"depends": [
 			{

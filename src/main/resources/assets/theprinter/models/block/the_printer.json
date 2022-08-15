@@ -1,0 +1,7 @@
+{
+  "parent": "theprinter:block/the_printer_base",
+  "textures": {
+    "screen": "theprinter:block/screen",
+    "grid": "theprinter:block/grid"
+  }
+}

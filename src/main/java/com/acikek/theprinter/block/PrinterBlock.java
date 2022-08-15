@@ -19,6 +19,9 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import org.quiltmc.qsl.block.extensions.api.QuiltBlockSettings;
@@ -27,10 +30,17 @@ import org.quiltmc.qsl.item.setting.api.QuiltItemSettings;
 public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityProvider {
 
 	public static final BooleanProperty ON = BooleanProperty.of("on");
+	public static final BooleanProperty PRINTING = BooleanProperty.of("printing");
 
 	public static final Settings SETTINGS = QuiltBlockSettings.of(Material.METAL)
 			.strength(6.0f, 6.0f)
 			.luminance(value -> value.get(ON) ? 4 : 1);
+
+	public static final VoxelShape SHAPE = VoxelShapes.union(
+			VoxelShapes.cuboid(0.0, 0.0, 0.0, 1.0, 0.75, 1.0),
+			VoxelShapes.cuboid(0.125, 0.75, 0.125, 0.875, 0.875, 0.875),
+			VoxelShapes.cuboid(0.0, 0.875, 0.0, 1.0, 1.0, 1.0)
+	);
 
 	public static final PrinterBlock INSTANCE = new PrinterBlock();
 
@@ -38,7 +48,13 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 		super(SETTINGS);
 		setDefaultState(getDefaultState()
 				.with(FACING, Direction.NORTH)
-				.with(ON, false));
+				.with(ON, false)
+				.with(PRINTING, false));
+	}
+
+	@Override
+	public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+		return SHAPE;
 	}
 
 	@Override
@@ -70,7 +86,7 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 	@Override
 	protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
 		super.appendProperties(builder);
-		builder.add(FACING, ON);
+		builder.add(FACING, ON, PRINTING);
 	}
 
 	public static void register() {

@@ -2,6 +2,6 @@
   "parent": "theprinter:block/the_printer_base",
   "textures": {
     "screen": "theprinter:block/screen_on",
-    "grid": "theprinter:block/grid"
+    "grid": "theprinter:block/grid_printing"
   }
 }
