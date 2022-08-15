@@ -2,6 +2,7 @@ package com.acikek.theprinter;
 
 import com.acikek.theprinter.block.PrinterBlock;
 import com.acikek.theprinter.block.PrinterBlockEntity;
+import com.acikek.theprinter.sound.ModSoundEvents;
 import net.minecraft.util.Identifier;
 import org.quiltmc.loader.api.ModContainer;
 import org.quiltmc.qsl.base.api.entrypoint.ModInitializer;
@@ -23,5 +24,6 @@ public class ThePrinter implements ModInitializer {
 		LOGGER.info("Hello Quilt world from {}!", mod.metadata().name());
 		PrinterBlock.register();
 		PrinterBlockEntity.register();
+		ModSoundEvents.register();
 	}
 }

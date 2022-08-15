@@ -1,18 +1,20 @@
 package com.acikek.theprinter.block;
 
 import com.acikek.theprinter.ThePrinter;
+import com.acikek.theprinter.sound.ModSoundEvents;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.entity.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.util.ActionResult;
@@ -22,6 +24,7 @@ import net.minecraft.util.Rarity;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
@@ -68,12 +71,11 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 			ItemStack handStack = player.getStackInHand(hand);
 			if (!handStack.isEmpty() && !state.get(ON)) {
 				world.setBlockState(pos, state.with(ON, true));
-				blockEntity.setStack(0, handStack.copy());
-				if (!player.isCreative()) {
-					handStack.decrement(1);
+				if (handStack.getItem() instanceof BlockItem blockItem) {
+					world.playSound(null, pos, blockItem.getBlock().getDefaultState().getSoundGroup().getPlaceSound(), SoundCategory.BLOCKS, 1.0f, 1.3f);
 				}
-				// beep up sound
-				event = SoundEvents.ITEM_AXE_SCRAPE;
+				blockEntity.addItem(player, handStack);
+				event = ModSoundEvents.STARTUP;
 			}
 			else if (handStack.isEmpty()) {
 				if (state.get(PRINTING)) {
@@ -81,11 +83,12 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 				}
 				else if (state.get(ON)) {
 					world.setBlockState(pos, state.with(ON, false));
-					if (!player.isCreative()) {
-						player.giveItemStack(blockEntity.removeStack(0));
+					if (blockEntity.xp > 0 && world instanceof ServerWorld serverWorld) {
+						Vec3d xpPos = Vec3d.ofCenter(pos).add(0.0, 0.4, 0.0);
+						ExperienceOrbEntity.spawn(serverWorld, xpPos, blockEntity.xp);
 					}
-					// beep down sound
-					event = SoundEvents.ITEM_FIRECHARGE_USE;
+					blockEntity.removeItem(player, false);
+					event = ModSoundEvents.SHUTDOWN;
 				}
 			}
 			if (event != null) {

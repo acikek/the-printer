@@ -1,0 +1,20 @@
+{
+  "block.the_printer.startup": {
+    "subtitle": "subtitles.theprinter.startup",
+    "sounds": [
+      "theprinter:startup"
+    ]
+  },
+  "block.the_printer.shutdown": {
+    "subtitle": "subtitles.theprinter.shutdown",
+    "sounds": [
+      "theprinter:shutdown"
+    ]
+  },
+  "block.the_printer.printing": {
+    "subtitle": "subtitles.theprinter.printing",
+    "sounds": [
+      "theprinter:printing"
+    ]
+  }
+}

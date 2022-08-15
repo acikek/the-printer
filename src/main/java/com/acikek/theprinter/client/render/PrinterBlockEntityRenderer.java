@@ -2,8 +2,10 @@ package com.acikek.theprinter.client.render;
 
 import com.acikek.theprinter.block.PrinterBlock;
 import com.acikek.theprinter.block.PrinterBlockEntity;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
 import net.minecraft.block.BlockState;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
@@ -26,9 +28,12 @@ public class PrinterBlockEntityRenderer implements BlockEntityRenderer<PrinterBl
 
 	public void renderScreenStack(ItemStack stack, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int lightAbove, int overlay, int seed) {
 		matrices.push();
-		matrices.scale(0.75f, 0.75f, 1);
+		matrices.translate(0.0, -0.06, 0.0);
+		matrices.scale(0.4f, 0.4f, 1);
 		matrices.multiplyMatrix(Matrix4f.scale(1, 1, 0.01f));
+		//RenderSystem.setShaderColor(0.1f, 0.1f, 0.1f, 1.0f);
 		itemRenderer.renderItem(stack, ModelTransformation.Mode.GUI, lightAbove, overlay, matrices, vertexConsumers, seed);
+		//RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 		matrices.pop();
 	}
 
