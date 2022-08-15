@@ -24,7 +24,7 @@
         "items": [
           {
             "items": [
-              "minecraft:has_diamond_block"
+              "minecraft:diamond_block"
             ]
           }
         ]

@@ -5,7 +5,6 @@ import com.acikek.theprinter.util.ImplementedInventory;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.entity.ai.TargetPredicate;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventories;
 import net.minecraft.item.ItemStack;
@@ -52,10 +51,8 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 	}
 
 	public static void tick(World world, BlockPos pos, BlockState state, PrinterBlockEntity blockEntity) {
-		if (!world.isClient()) {
-			if (world.getTime() % 2 == 0) {
-				blockEntity.gatherXp(world);
-			}
+		if (world.getTime() % 2 == 0) {
+			blockEntity.gatherXp(world);
 		}
 	}
 

@@ -9,6 +9,10 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.item.ItemStack;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.util.ActionResult;
@@ -59,8 +63,35 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 
 	@Override
 	public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-		if (hand == Hand.MAIN_HAND) {
-			world.setBlockState(pos, state.with(ON, !state.get(ON)));
+		if (hand == Hand.MAIN_HAND && world.getBlockEntity(pos) instanceof PrinterBlockEntity blockEntity) {
+			SoundEvent event = null;
+			ItemStack handStack = player.getStackInHand(hand);
+			if (!handStack.isEmpty() && !state.get(ON)) {
+				world.setBlockState(pos, state.with(ON, true));
+				blockEntity.setStack(0, handStack.copy());
+				if (!player.isCreative()) {
+					handStack.decrement(1);
+				}
+				// beep up sound
+				event = SoundEvents.ITEM_AXE_SCRAPE;
+			}
+			else if (handStack.isEmpty()) {
+				if (state.get(PRINTING)) {
+
+				}
+				else if (state.get(ON)) {
+					world.setBlockState(pos, state.with(ON, false));
+					if (!player.isCreative()) {
+						player.giveItemStack(blockEntity.removeStack(0));
+					}
+					// beep down sound
+					event = SoundEvents.ITEM_FIRECHARGE_USE;
+				}
+			}
+			if (event != null) {
+				world.playSound(null, pos, event, SoundCategory.BLOCKS, 1.0f, 1.0f);
+				return ActionResult.SUCCESS;
+			}
 		}
 		return ActionResult.PASS;
 	}
