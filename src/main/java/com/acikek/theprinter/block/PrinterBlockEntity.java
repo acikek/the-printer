@@ -26,6 +26,7 @@ import net.minecraft.util.Rarity;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
@@ -70,6 +71,7 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 		if (!player.isCreative()) {
 			player.giveItemStack(removeStack(0));
 		}
+		xp = 0;
 		if (!printed) {
 			requiredXP = -1;
 			requiredTicks = -1;
@@ -136,6 +138,7 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 				world.playSound(null, pos, SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.BLOCKS, 0.5f, world.random.nextFloat() + 0.5f);
 			}
 			if (xp >= requiredXP) {
+				xp = MathHelper.ceil(requiredXP);
 				return true;
 			}
 		}
@@ -172,17 +175,15 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 	}
 
 	public static void tick(World world, BlockPos pos, BlockState state, PrinterBlockEntity blockEntity) {
-		if (!world.isClient()) {
-			boolean on = state.get(PrinterBlock.ON);
-			boolean printing = state.get(PrinterBlock.PRINTING);
-			if (on && !printing && world.getTime() % 2 == 0 && blockEntity.gatherXp(world)) {
-				blockEntity.startPrinting(world, pos, state);
-			}
-			if (printing && blockEntity.progress < blockEntity.requiredTicks) {
-				blockEntity.progressPrinting(world, pos);
-				if (blockEntity.progress == blockEntity.requiredTicks) {
-					blockEntity.finishPrinting(world, pos, state);
-				}
+		boolean on = state.get(PrinterBlock.ON);
+		boolean printing = state.get(PrinterBlock.PRINTING);
+		if (on && !printing && world.getTime() % 2 == 0 && blockEntity.gatherXp(world)) {
+			blockEntity.startPrinting(world, pos, state);
+		}
+		if (printing && blockEntity.progress < blockEntity.requiredTicks) {
+			blockEntity.progressPrinting(world, pos);
+			if (blockEntity.progress == blockEntity.requiredTicks) {
+				blockEntity.finishPrinting(world, pos, state);
 			}
 		}
 	}
