@@ -16,10 +16,10 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.util.*;
-import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -37,10 +37,11 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 
 	public static final BooleanProperty ON = BooleanProperty.of("on");
 	public static final BooleanProperty PRINTING = BooleanProperty.of("printing");
+	public static final BooleanProperty FINISHED = BooleanProperty.of("finished");
 
 	public static final Settings SETTINGS = QuiltBlockSettings.of(Material.METAL)
 			.strength(6.0f, 6.0f)
-			.luminance(value -> value.get(ON) ? 4 : 1);
+			.luminance(value -> value.get(PRINTING) ? 9 : value.get(ON) ? 6 : 1);
 
 	public static final VoxelShape SHAPE = VoxelShapes.union(
 			VoxelShapes.cuboid(0.0, 0.0, 0.0, 1.0, 0.75, 1.0),
@@ -55,7 +56,8 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 		setDefaultState(getDefaultState()
 				.with(FACING, Direction.NORTH)
 				.with(ON, false)
-				.with(PRINTING, false));
+				.with(PRINTING, false)
+				.with(FINISHED, false));
 	}
 
 	@Override
@@ -66,9 +68,12 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 	@Override
 	public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
 		if (hand == Hand.MAIN_HAND && world.getBlockEntity(pos) instanceof PrinterBlockEntity blockEntity) {
+			boolean on = state.get(ON);
+			boolean printing = state.get(PRINTING);
+			boolean finished = state.get(FINISHED);
 			SoundEvent event = null;
 			ItemStack handStack = player.getStackInHand(hand);
-			if (!handStack.isEmpty() && !state.get(ON)) {
+			if (!handStack.isEmpty() && !on) {
 				world.setBlockState(pos, state.with(ON, true));
 				if (handStack.getItem() instanceof BlockItem blockItem) {
 					world.playSound(null, pos, blockItem.getBlock().getDefaultState().getSoundGroup().getPlaceSound(), SoundCategory.BLOCKS, 1.0f, 1.3f);
@@ -76,15 +81,10 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 				blockEntity.addItem(player, handStack);
 				event = ModSoundEvents.STARTUP;
 			}
-			else if (handStack.isEmpty()) {
-				if (state.get(PRINTING)) {
-
-				}
-				else if (state.get(ON)) {
-					world.setBlockState(pos, state.with(ON, false));
-					blockEntity.removeItem(world, pos, player, false);
-					event = ModSoundEvents.SHUTDOWN;
-				}
+			else if (handStack.isEmpty() && !printing && (on || finished)) {
+				world.setBlockState(pos, state.with(finished ? FINISHED : ON, false));
+				blockEntity.removeItem(world, pos, player, finished);
+				event = finished ? SoundEvents.ENTITY_ITEM_PICKUP : ModSoundEvents.SHUTDOWN;
 			}
 			if (event != null) {
 				world.playSound(null, pos, event, SoundCategory.BLOCKS, 1.0f, 1.0f);
@@ -104,7 +104,7 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 	@Override
 	public void onStateReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean moved) {
 		if (state.getBlock() != newState.getBlock() && world.getBlockEntity(pos) instanceof PrinterBlockEntity blockEntity) {
-			ItemScatterer.spawn(world, pos, DefaultedList.copyOf(ItemStack.EMPTY, blockEntity.getStack(0)));
+			ItemScatterer.spawn(world, pos, blockEntity.getActualInventory(state));
 			if (world instanceof ServerWorld serverWorld) {
 				blockEntity.tryDropXP(serverWorld, pos);
 				if (state.get(PRINTING)) {
@@ -136,7 +136,7 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 	@Override
 	protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
 		super.appendProperties(builder);
-		builder.add(FACING, ON, PRINTING);
+		builder.add(FACING, ON, PRINTING, FINISHED);
 	}
 
 	public static void register() {
@@ -144,6 +144,6 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 		Registry.register(Registry.BLOCK, id, INSTANCE);
 		Registry.register(Registry.ITEM, id, new BlockItem(INSTANCE, new QuiltItemSettings()
 				.group(ItemGroup.DECORATIONS)
-				.rarity(Rarity.EPIC)));
+				.rarity(Rarity.RARE)));
 	}
 }

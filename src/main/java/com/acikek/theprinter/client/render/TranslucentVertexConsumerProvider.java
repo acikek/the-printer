@@ -41,7 +41,7 @@ public class TranslucentVertexConsumerProvider implements VertexConsumerProvider
 
 		@Override
 		public VertexConsumer color(int red, int green, int blue, int alpha) {
-			return delegate.color(getProgress(red), getProgress(green), getProgress(blue), getProgress(255));
+			return delegate.color(getProgress(red), getProgress(green), getProgress(blue), Math.max(30, getProgress(255)));
 		}
 
 		@Override

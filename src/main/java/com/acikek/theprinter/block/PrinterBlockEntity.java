@@ -90,18 +90,34 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 		}
 	}
 
+	/**
+	 * Removes an item from the inventory.<br>
+	 * If the item was printed, doesn't remove the item. Otherwise, removes the item, drops any leftover experience, and resets values.
+	 * Either way, if the player isn't in creative mode, gives them the target item.
+	 *
+	 * @see	PrinterBlockEntity#tryDropXP(ServerWorld, BlockPos)
+	 * @param printed Whether the printed item is being removed.
+	 */
 	public void removeItem(World world, BlockPos pos, PlayerEntity player, boolean printed) {
+		ItemStack removed = printed ? getStack(1) : removeStack(0);
 		if (!player.isCreative()) {
-			player.giveItemStack(removeStack(0));
+			player.giveItemStack(removed);
 		}
-		if (world instanceof ServerWorld serverWorld) {
-			tryDropXP(serverWorld, pos);
-		}
-		xp = 0;
 		if (!printed) {
+			if (world instanceof ServerWorld serverWorld) {
+				tryDropXP(serverWorld, pos);
+			}
 			requiredXP = -1;
 			requiredTicks = -1;
 		}
+		xp = 0;
+	}
+
+	public DefaultedList<ItemStack> getActualInventory(BlockState state) {
+		if (getStack(1).isEmpty() || state.get(PrinterBlock.FINISHED)) {
+			return getItems();
+		}
+		return DefaultedList.copyOf(ItemStack.EMPTY, getStack(0));
 	}
 
 	public static int getRarityXPMultiplier(Rarity rarity) {
@@ -188,7 +204,7 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 	}
 
 	public void finishPrinting(World world, BlockPos pos, BlockState state) {
-		world.setBlockState(pos, state.with(PrinterBlock.PRINTING, false));
+		world.setBlockState(pos, state.with(PrinterBlock.PRINTING, false).with(PrinterBlock.FINISHED, true));
 		xp = 0;
 		startOffset = 0;
 		progress = 0;
@@ -200,7 +216,8 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 	public static void tick(World world, BlockPos pos, BlockState state, PrinterBlockEntity blockEntity) {
 		boolean on = state.get(PrinterBlock.ON);
 		boolean printing = state.get(PrinterBlock.PRINTING);
-		if (on && !printing && world.getTime() % 2 == 0 && blockEntity.gatherXp(world)) {
+		boolean finished = state.get(PrinterBlock.FINISHED);
+		if (on && !printing && !finished && world.getTime() % 2 == 0 && blockEntity.gatherXp(world)) {
 			blockEntity.startPrinting(world, pos, state);
 		}
 		if (printing && blockEntity.progress < blockEntity.requiredTicks) {

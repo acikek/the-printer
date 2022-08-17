@@ -3,12 +3,10 @@ package com.acikek.theprinter.client.render;
 import com.acikek.theprinter.ThePrinter;
 import com.acikek.theprinter.block.PrinterBlock;
 import com.acikek.theprinter.block.PrinterBlockEntity;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.acikek.theprinter.client.ThePrinterClient;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.fabricmc.fabric.api.client.model.BakedModelManagerHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
 import net.minecraft.block.BlockState;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -16,15 +14,11 @@ import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
 import net.minecraft.client.render.item.ItemRenderer;
-import net.minecraft.client.render.model.BakedModelManager;
 import net.minecraft.client.render.model.json.ModelTransformation;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Matrix3f;
-import net.minecraft.util.math.Matrix4f;
-import net.minecraft.util.math.Vec3f;
+import net.minecraft.util.math.*;
 
 public class PrinterBlockEntityRenderer implements BlockEntityRenderer<PrinterBlockEntity> {
 
@@ -69,10 +63,16 @@ public class PrinterBlockEntityRenderer implements BlockEntityRenderer<PrinterBl
 		matrices.pop();
 	}
 
-	public void renderPrintingStack(ItemStack stack, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int lightAbove, int overlay, int seed, float progress) {
+	public void renderPrintingStack(ItemStack stack, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int lightAbove, int overlay, int seed, float progress, boolean finished) {
 		matrices.push();
-		matrices.translate(0.0, 1.0, 0.0);
-		VertexConsumerProvider vcp = vertexConsumers instanceof VertexConsumerProvider.Immediate immediate
+		matrices.translate(0.5, 1.4, 0.5);
+		float angle = MathHelper.TAU * ((ThePrinterClient.renderTicks % 120 + tickDelta) / 120.0f);
+		if (finished) {
+			matrices.translate(0.0, MathHelper.sin(angle) * 0.1f, 0.0);
+		}
+		matrices.multiply(Vec3f.POSITIVE_Y.getRadialQuaternion(angle));
+		matrices.scale(1.3f, 1.3f, 1.3f);
+		VertexConsumerProvider vcp = !finished && vertexConsumers instanceof VertexConsumerProvider.Immediate immediate
 				? new TranslucentVertexConsumerProvider(immediate, progress)
 				: vertexConsumers;
 		itemRenderer.renderItem(stack, ModelTransformation.Mode.GROUND, lightAbove, overlay, matrices, vcp, seed);
@@ -88,7 +88,7 @@ public class PrinterBlockEntityRenderer implements BlockEntityRenderer<PrinterBl
 		matrices.push();
 		int lightAbove = entity.getWorld() != null ? WorldRenderer.getLightmapCoordinates(entity.getWorld(), entity.getPos().up()) : light;
 		int seed = (int) entity.getPos().asLong();
-		// Render overlay
+		// Render screen overlay
 		matrices.push();
 		positionOverlay(matrices, state);
 		if (entity.xp > 0) {
@@ -99,15 +99,16 @@ public class PrinterBlockEntityRenderer implements BlockEntityRenderer<PrinterBl
 		}
 		matrices.pop();
 		// Render top printing stack
-		if (state.get(PrinterBlock.PRINTING) && !entity.getStack(0).isEmpty()) {
-			renderPrintingStack(entity.getStack(0), matrices, vertexConsumers, lightAbove, overlay, seed, (float) entity.progress / entity.requiredTicks);
+		boolean finished = state.get(PrinterBlock.FINISHED);
+		if ((state.get(PrinterBlock.PRINTING) || finished) && !entity.getStack(0).isEmpty()) {
+			renderPrintingStack(entity.getStack(0), tickDelta, matrices, vertexConsumers, lightAbove, overlay, seed, finished ? 1.0f : ((float) entity.progress / entity.requiredTicks), finished);
 		}
 		matrices.pop();
 	}
 
 	@Override
 	public boolean rendersOutsideBoundingBox(PrinterBlockEntity blockEntity) {
-		return true;
+		return false;
 	}
 
 	public static void register() {
