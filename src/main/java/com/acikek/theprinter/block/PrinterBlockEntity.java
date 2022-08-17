@@ -6,6 +6,7 @@ import com.acikek.theprinter.util.ImplementedInventory;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.entity.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventories;
 import net.minecraft.item.BlockItem;
@@ -16,9 +17,6 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.Packet;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.StopSoundS2CPacket;
-import net.minecraft.server.command.StopSoundCommand;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -32,7 +30,6 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import org.quiltmc.qsl.block.entity.api.QuiltBlockEntityTypeBuilder;
-import org.quiltmc.qsl.networking.api.PlayerLookup;
 
 import java.util.List;
 
@@ -46,7 +43,15 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 
 	public Box xpArea;
 
+	/**
+	 * The printer's inventory.
+	 * <p>
+	 * The first stack will show up on the screen. Its quantity should be limited to {@code 1}, but in all other ways a copy of the input stack.<br>
+	 * The second stack will render above the machine as it is printing the item. Its quantity should <bold>not</bold> be limited, but modifications are allowed.
+	 * </p>
+	 */
 	public DefaultedList<ItemStack> items = DefaultedList.ofSize(2, ItemStack.EMPTY);
+
 	public int xp = 0;
 	public int requiredXP = -1;
 	public int progress = 0;
@@ -58,18 +63,39 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 		xpArea = Box.of(Vec3d.ofCenter(blockPos), 3.5, 3.5, 3.5);
 	}
 
+	public static int getMaxStackCount(ItemStack stack) {
+		return 1;
+	}
+
+	public void setStack(int slot, ItemStack handStack, int count) {
+		ItemStack copy = handStack.copy();
+		copy.setCount(count);
+		setStack(slot, copy);
+	}
+
 	public void addItem(PlayerEntity player, ItemStack handStack) {
 		requiredXP = getRequiredXP(handStack);
 		requiredTicks = requiredXP * 3;
-		setStack(0, handStack.copy());
+		setStack(0, handStack, 1);
+		setStack(1, handStack, getMaxStackCount(handStack));
 		if (!player.isCreative()) {
 			handStack.decrement(1);
 		}
 	}
 
-	public void removeItem(PlayerEntity player, boolean printed) {
+	public void tryDropXP(ServerWorld world, BlockPos pos) {
+		if (xp > 0) {
+			Vec3d xpPos = Vec3d.ofCenter(pos).add(0.0, 0.4, 0.0);
+			ExperienceOrbEntity.spawn(world, xpPos, xp);
+		}
+	}
+
+	public void removeItem(World world, BlockPos pos, PlayerEntity player, boolean printed) {
 		if (!player.isCreative()) {
 			player.giveItemStack(removeStack(0));
+		}
+		if (world instanceof ServerWorld serverWorld) {
+			tryDropXP(serverWorld, pos);
 		}
 		xp = 0;
 		if (!printed) {
@@ -167,10 +193,7 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 		startOffset = 0;
 		progress = 0;
 		if (world instanceof ServerWorld serverWorld) {
-			StopSoundS2CPacket packet = new StopSoundS2CPacket(ModSoundEvents.PRINTING.getId(), SoundCategory.BLOCKS);
-			for (ServerPlayerEntity player : PlayerLookup.tracking(serverWorld, pos)) {
-				player.networkHandler.sendPacket(packet);
-			}
+			PrinterBlock.stopPrintingSound(serverWorld, pos);
 		}
 	}
 

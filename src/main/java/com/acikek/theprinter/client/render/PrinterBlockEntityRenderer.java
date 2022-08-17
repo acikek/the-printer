@@ -3,9 +3,12 @@ package com.acikek.theprinter.client.render;
 import com.acikek.theprinter.ThePrinter;
 import com.acikek.theprinter.block.PrinterBlock;
 import com.acikek.theprinter.block.PrinterBlockEntity;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.fabricmc.fabric.api.client.model.BakedModelManagerHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
 import net.minecraft.block.BlockState;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -13,11 +16,13 @@ import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
 import net.minecraft.client.render.item.ItemRenderer;
+import net.minecraft.client.render.model.BakedModelManager;
 import net.minecraft.client.render.model.json.ModelTransformation;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Matrix3f;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3f;
 
@@ -31,17 +36,27 @@ public class PrinterBlockEntityRenderer implements BlockEntityRenderer<PrinterBl
 		itemRenderer = ctx.getItemRenderer();
 	}
 
+	public void positionOverlay(MatrixStack matrices, BlockState state) {
+		Direction facing = state.get(PrinterBlock.FACING);
+		Vec3f vec = facing.getUnitVector();
+		matrices.translate(vec.getX() / 2.0f + 0.5f, vec.getY() / 2.0f + 0.5f, vec.getZ() / 2.0f + 0.5f);
+		matrices.multiply(facing.getRotationQuaternion());
+		matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-90));
+		matrices.translate(0, 0, 0.005);
+	}
+
 	public void renderProgressBar(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int lightAbove, float progress) {
-		VertexConsumer buffer = vertexConsumers.getBuffer(RenderLayer.getEntityCutout(PROGRESS_BAR));
 		matrices.push();
-		matrices.translate(0.4875, -1.25, 0.0);
+		matrices.translate(0.5, -1.25, 0.0);
 		matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180));
+		VertexConsumer buffer = vertexConsumers.getBuffer(RenderLayer.getEntityCutout(PROGRESS_BAR));
 		Matrix4f matrix = matrices.peek().getPosition();
-		float progressX = 0.8125f - 0.6520f * progress;
-		buffer.vertex(matrix, progressX, 0.875f, 0).color(0xFF_FFFFFF).uv(0, 0).overlay(OverlayTexture.DEFAULT_UV).light(lightAbove).normal(0, 0, 1).next();
-		buffer.vertex(matrix, progressX, 0.9375f, 0).color(0xFF_FFFFFF).uv(0, 1).overlay(OverlayTexture.DEFAULT_UV).light(lightAbove).normal(0, 0, 1).next();
-		buffer.vertex(matrix, 0.8125f, 0.9375f, 0).color(0xFF_FFFFFF).uv(1, 1).overlay(OverlayTexture.DEFAULT_UV).light(lightAbove).normal(0, 0, 1).next();
-		buffer.vertex(matrix, 0.8125f, 0.875f, 0).color(0xFF_FFFFFF).uv(1, 0).overlay(OverlayTexture.DEFAULT_UV).light(lightAbove).normal(0, 0, 1).next();
+		Matrix3f normal = matrices.peek().getNormal();
+		float progressX = 0.8125f - 0.6250f * progress;
+		buffer.vertex(matrix, progressX, 0.875f, 0).color(0xFF_FFFFFF).uv(0, 0).overlay(OverlayTexture.DEFAULT_UV).light(lightAbove).normal(normal, 0, 0, 1).next();
+		buffer.vertex(matrix, progressX, 0.9375f, 0).color(0xFF_FFFFFF).uv(0, 1).overlay(OverlayTexture.DEFAULT_UV).light(lightAbove).normal(normal, 0, 0, 1).next();
+		buffer.vertex(matrix, 0.8125f, 0.9375f, 0).color(0xFF_FFFFFF).uv(1, 1).overlay(OverlayTexture.DEFAULT_UV).light(lightAbove).normal(normal, 0, 0, 1).next();
+		buffer.vertex(matrix, 0.8125f, 0.875f, 0).color(0xFF_FFFFFF).uv(1, 0).overlay(OverlayTexture.DEFAULT_UV).light(lightAbove).normal(normal, 0, 0, 1).next();
 		matrices.pop();
 	}
 
@@ -54,27 +69,38 @@ public class PrinterBlockEntityRenderer implements BlockEntityRenderer<PrinterBl
 		matrices.pop();
 	}
 
+	public void renderPrintingStack(ItemStack stack, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int lightAbove, int overlay, int seed, float progress) {
+		matrices.push();
+		matrices.translate(0.0, 1.0, 0.0);
+		VertexConsumerProvider vcp = vertexConsumers instanceof VertexConsumerProvider.Immediate immediate
+				? new TranslucentVertexConsumerProvider(immediate, progress)
+				: vertexConsumers;
+		itemRenderer.renderItem(stack, ModelTransformation.Mode.GROUND, lightAbove, overlay, matrices, vcp, seed);
+		matrices.pop();
+	}
+
 	@Override
 	public void render(PrinterBlockEntity entity, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay) {
-		if (entity.isEmpty()) {
+		BlockState state = entity.getCachedState();
+		if (!state.get(PrinterBlock.ON)) {
 			return;
 		}
 		matrices.push();
 		int lightAbove = entity.getWorld() != null ? WorldRenderer.getLightmapCoordinates(entity.getWorld(), entity.getPos().up()) : light;
-		BlockState state = entity.getCachedState();
-		Direction facing = state.get(PrinterBlock.FACING);
-		Vec3f vec = facing.getUnitVector();
-		matrices.translate(vec.getX() / 2.0f + 0.5f, vec.getY() / 2.0f + 0.5f, vec.getZ() / 2.0f + 0.5f);
-		matrices.multiply(facing.getRotationQuaternion());
-		matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-90));
-		matrices.translate(0, 0, 0.005);
-		if (state.get(PrinterBlock.ON)) {
-			if (entity.xp > 0) {
-				renderProgressBar(matrices, vertexConsumers, lightAbove, (float) entity.xp / entity.requiredXP);
-			}
-			if (!entity.getStack(0).isEmpty()) {
-				renderScreenStack(entity.getStack(0), matrices, vertexConsumers, lightAbove, overlay, (int) entity.getPos().asLong());
-			}
+		int seed = (int) entity.getPos().asLong();
+		// Render overlay
+		matrices.push();
+		positionOverlay(matrices, state);
+		if (entity.xp > 0) {
+			renderProgressBar(matrices, vertexConsumers, lightAbove, (float) entity.xp / entity.requiredXP);
+		}
+		if (!entity.getStack(0).isEmpty()) {
+			renderScreenStack(entity.getStack(0), matrices, vertexConsumers, lightAbove, overlay, seed);
+		}
+		matrices.pop();
+		// Render top printing stack
+		if (state.get(PrinterBlock.PRINTING) && !entity.getStack(0).isEmpty()) {
+			renderPrintingStack(entity.getStack(0), matrices, vertexConsumers, lightAbove, overlay, seed, (float) entity.progress / entity.requiredTicks);
 		}
 		matrices.pop();
 	}
