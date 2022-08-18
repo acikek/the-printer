@@ -65,6 +65,10 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 		return SHAPE;
 	}
 
+	public static boolean canDepositXP(BlockState state) {
+		return state.isOf(INSTANCE) && state.get(ON) && !state.get(PRINTING) && !state.get(FINISHED);
+	}
+
 	@Override
 	public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
 		if (hand == Hand.MAIN_HAND && world.getBlockEntity(pos) instanceof PrinterBlockEntity blockEntity) {

@@ -3,6 +3,7 @@ package com.acikek.theprinter.block;
 import com.acikek.theprinter.ThePrinter;
 import com.acikek.theprinter.sound.ModSoundEvents;
 import com.acikek.theprinter.util.ImplementedInventory;
+import com.acikek.theprinter.util.PrinterExperienceOrbEntity;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
@@ -24,7 +25,6 @@ import net.minecraft.util.Rarity;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
@@ -41,7 +41,8 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 
 	public static BlockEntityType<PrinterBlockEntity> BLOCK_ENTITY_TYPE;
 
-	public Box xpArea;
+	public Box playerDepositArea;
+	public Box orbDepositArea;
 
 	/**
 	 * The printer's inventory.
@@ -60,7 +61,9 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 
 	public PrinterBlockEntity(BlockPos blockPos, BlockState blockState) {
 		super(BLOCK_ENTITY_TYPE, blockPos, blockState);
-		xpArea = Box.of(Vec3d.ofCenter(blockPos), 3.5, 3.5, 3.5);
+		Vec3d center = Vec3d.ofCenter(blockPos);
+		playerDepositArea = Box.of(center, 3.5, 2.5, 3.5);
+		orbDepositArea = Box.of(center, 6.0, 3.5, 6.0);
 	}
 
 	public static int getMaxStackCount(ItemStack stack) {
@@ -165,26 +168,43 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 		return player.isSneaking() && player.experienceLevel != 0 && player.experienceProgress > 0.0f;
 	}
 
-	/**
-	 * Searches for players within the {@link PrinterBlockEntity#xpArea} that qualify {@link PrinterBlockEntity#canDepositXP(PlayerEntity)}
-	 * and takes some experience points from them, more if they're jumping.
-	 * @return Whether the machine has reached the {@link PrinterBlockEntity#requiredXP} for printing.
-	 */
-	public boolean gatherXp(World world) {
-		List<PlayerEntity> players = world.getEntitiesByClass(PlayerEntity.class, xpArea, PrinterBlockEntity::canDepositXP);
-		for (PlayerEntity player : players) {
-			int amount = player.isOnGround() ? 1 : 3;
-			player.addExperience(-amount);
-			xp += amount;
-			if (world.random.nextFloat() > (player.isOnGround() ? 0.5f : 0.3f)) {
-				world.playSound(null, pos, SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.BLOCKS, 0.5f, world.random.nextFloat() + 0.5f);
-			}
-			if (xp >= requiredXP) {
-				xp = MathHelper.ceil(requiredXP);
-				return true;
-			}
+	public static boolean canDepositXP(ExperienceOrbEntity orb) {
+		PrinterExperienceOrbEntity printerOrb = (PrinterExperienceOrbEntity) orb;
+		return printerOrb.canDeposit() && printerOrb.getPrinterTarget() == null;
+	}
+
+	public int adjustAmount(int amount) {
+		if (xp + amount >= requiredXP) {
+			return requiredXP - xp;
 		}
-		return false;
+		return amount;
+	}
+
+	public void depositXP(World world, int amount, float soundChance) {
+		xp += amount;
+		if (world.random.nextFloat() > soundChance) {
+			world.playSound(null, pos, SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.BLOCKS, 0.5f, world.random.nextFloat() + 0.5f);
+		}
+	}
+
+	/**
+	 * Searches for players within the {@link PrinterBlockEntity#playerDepositArea} that qualify {@link PrinterBlockEntity#canDepositXP(PlayerEntity)}
+	 * and takes some experience points from them, more if they're jumping.
+	 */
+	public void gatherXP(World world) {
+		List<PlayerEntity> players = world.getEntitiesByClass(PlayerEntity.class, playerDepositArea, PrinterBlockEntity::canDepositXP);
+		for (PlayerEntity player : players) {
+			int amount = adjustAmount(player.isOnGround() ? 1 : 3);
+			player.addExperience(-amount);
+			depositXP(world, amount, player.isOnGround() ? 0.3f : 0.5f);
+		}
+	}
+
+	public void lureXPOrbs(World world, BlockPos pos) {
+		List<ExperienceOrbEntity> orbs = world.getEntitiesByClass(ExperienceOrbEntity.class, orbDepositArea, PrinterBlockEntity::canDepositXP);
+		for (ExperienceOrbEntity orb : orbs) {
+			((PrinterExperienceOrbEntity) orb).setPrinterTarget(pos);
+		}
 	}
 
 	public static int getTickOffset(World world) {
@@ -193,6 +213,7 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 
 	public void startPrinting(World world, BlockPos pos, BlockState state) {
 		world.setBlockState(pos, state.with(PrinterBlock.PRINTING, true));
+		// Add one to the tick offset since the sound will begin next tick
 		startOffset = getTickOffset(world) + 1;
 	}
 
@@ -214,13 +235,19 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 	}
 
 	public static void tick(World world, BlockPos pos, BlockState state, PrinterBlockEntity blockEntity) {
-		boolean on = state.get(PrinterBlock.ON);
-		boolean printing = state.get(PrinterBlock.PRINTING);
-		boolean finished = state.get(PrinterBlock.FINISHED);
-		if (on && !printing && !finished && world.getTime() % 2 == 0 && blockEntity.gatherXp(world)) {
-			blockEntity.startPrinting(world, pos, state);
+		if (PrinterBlock.canDepositXP(state)) {
+			// Every two ticks, gather XP from players
+			if (world.getTime() % 2 == 0) {
+				blockEntity.gatherXP(world);
+			}
+			// Lure nearby vacant XP orbs
+			blockEntity.lureXPOrbs(world, pos);
+			// If the machine has enough XP, start the printing process
+			if (blockEntity.xp >= blockEntity.requiredXP) {
+				blockEntity.startPrinting(world, pos, state);
+			}
 		}
-		if (printing && blockEntity.progress < blockEntity.requiredTicks) {
+		if (state.get(PrinterBlock.PRINTING) && blockEntity.progress < blockEntity.requiredTicks) {
 			blockEntity.progressPrinting(world, pos);
 			if (blockEntity.progress == blockEntity.requiredTicks) {
 				blockEntity.finishPrinting(world, pos, state);
