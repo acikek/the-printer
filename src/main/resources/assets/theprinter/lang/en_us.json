@@ -1,5 +1,11 @@
 {
   "block.theprinter.the_printer": "The Printer",
+  "advancements.theprinter.use_printer.title": "The Printer",
+  "advancements.theprinter.use_printer.description": "Duplicate an item with The Printer",
+  "advancements.theprinter.print_paper.title": "Overengineering",
+  "advancements.theprinter.print_paper.description": "Print some paper just to show off",
+  "advancements.theprinter.print_rare_item.title": "Cost-Effective",
+  "advancements.theprinter.print_rare_item.description": "Print an expensive rare item",
   "subtitle.theprinter.startup": "Printer starts up",
   "subtitle.theprinter.shutdown": "Printer shuts down",
   "subtitle.theprinter.printing": "Printing"

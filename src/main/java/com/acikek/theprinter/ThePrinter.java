@@ -1,5 +1,6 @@
 package com.acikek.theprinter;
 
+import com.acikek.theprinter.advancement.PrinterUsedCriterion;
 import com.acikek.theprinter.block.PrinterBlock;
 import com.acikek.theprinter.block.PrinterBlockEntity;
 import com.acikek.theprinter.sound.ModSoundEvents;
@@ -21,9 +22,10 @@ public class ThePrinter implements ModInitializer {
 
 	@Override
 	public void onInitialize(ModContainer mod) {
-		LOGGER.info("Hello Quilt world from {}!", mod.metadata().name());
+		LOGGER.info("The Printer - Have your XP ready!");
 		PrinterBlock.register();
 		PrinterBlockEntity.register();
+		PrinterUsedCriterion.register();
 		ModSoundEvents.register();
 	}
 }

@@ -1,0 +1,23 @@
+{
+  "parent": "minecraft:nether/summon_wither",
+  "display": {
+    "icon": {
+      "item": "theprinter:the_printer"
+    },
+    "title": {
+      "translate": "advancements.theprinter.use_printer.title"
+    },
+    "description": {
+      "translate": "advancements.theprinter.use_printer.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "use_printer": {
+      "trigger": "theprinter:printer_used"
+    }
+  }
+}

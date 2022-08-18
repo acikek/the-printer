@@ -1,6 +1,7 @@
 package com.acikek.theprinter.block;
 
 import com.acikek.theprinter.ThePrinter;
+import com.acikek.theprinter.advancement.PrinterUsedCriterion;
 import com.acikek.theprinter.sound.ModSoundEvents;
 import com.acikek.theprinter.util.ImplementedInventory;
 import com.acikek.theprinter.util.PrinterExperienceOrbEntity;
@@ -18,6 +19,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.Packet;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -96,7 +98,8 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 	/**
 	 * Removes an item from the inventory.<br>
 	 * If the item was printed, doesn't remove the item. Otherwise, removes the item, drops any leftover experience, and resets values.
-	 * Either way, if the player isn't in creative mode, gives them the target item.
+	 * Either way, if the player isn't in creative mode, gives them the target item.<br>
+	 * If the item was printed, also triggers {@link com.acikek.theprinter.advancement.PrinterUsedCriterion}.
 	 *
 	 * @see	PrinterBlockEntity#tryDropXP(ServerWorld, BlockPos)
 	 * @param printed Whether the printed item is being removed.
@@ -112,6 +115,9 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 			}
 			requiredXP = -1;
 			requiredTicks = -1;
+		}
+		else if (player instanceof ServerPlayerEntity serverPlayer) {
+			PrinterUsedCriterion.INSTANCE.trigger(serverPlayer, requiredXP, requiredTicks, removed, removed.getRarity());
 		}
 		xp = 0;
 	}

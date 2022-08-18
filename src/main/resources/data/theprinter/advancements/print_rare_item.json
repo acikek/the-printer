@@ -1,0 +1,28 @@
+{
+  "parent": "theprinter:use_printer",
+  "display": {
+    "icon": {
+      "item": "minecraft:diamond_sword",
+      "nbt": "{Enchantments:[{id:\"minecraft:sharpness\",lvl:1s}]}"
+    },
+    "title": {
+      "translate": "advancements.theprinter.print_rare_item.title"
+    },
+    "description": {
+      "translate": "advancements.theprinter.print_rare_item.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "print_rare_item": {
+      "trigger": "theprinter:printer_used",
+      "conditions": {
+        "xp": 500,
+        "rarity": "rare"
+      }
+    }
+  }
+}

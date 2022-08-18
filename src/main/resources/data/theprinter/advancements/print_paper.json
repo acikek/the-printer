@@ -1,0 +1,30 @@
+{
+  "parent": "theprinter:use_printer",
+  "display": {
+    "icon": {
+      "item": "minecraft:paper"
+    },
+    "title": {
+      "translate": "advancements.theprinter.print_paper.title"
+    },
+    "description": {
+      "translate": "advancements.theprinter.print_paper.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "print_paper": {
+      "trigger": "theprinter:printer_used",
+      "conditions": {
+        "item": {
+          "items": [
+            "minecraft:paper"
+          ]
+        }
+      }
+    }
+  }
+}
