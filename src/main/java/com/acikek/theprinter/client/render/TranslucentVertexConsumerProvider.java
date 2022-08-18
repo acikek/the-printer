@@ -1,6 +1,7 @@
 package com.acikek.theprinter.client.render;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormats;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.TexturedRenderLayers;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -17,6 +18,9 @@ public class TranslucentVertexConsumerProvider implements VertexConsumerProvider
 
 	@Override
 	public VertexConsumer getBuffer(RenderLayer renderLayer) {
+		if (renderLayer.getVertexFormat() != VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL) {
+			return immediate.getBuffer(renderLayer);
+		}
 		return new TranslucentVertexConsumer(immediate.getBuffer(TexturedRenderLayers.getItemEntityTranslucentCull()), progress);
 	}
 
