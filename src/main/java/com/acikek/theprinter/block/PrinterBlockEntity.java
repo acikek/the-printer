@@ -138,16 +138,6 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 		};
 	}
 
-	public static int getMaterialMultiplier(Item item) {
-		if (item instanceof BlockItem blockItem && blockItem.getBlock() instanceof PrinterBlock) {
-			return 8;
-		}
-		else if (item instanceof ToolItem) {
-			return 3;
-		}
-		return 1;
-	}
-
 	public static int getNbtXPCost(ItemStack stack) {
 		if (!stack.hasNbt()) {
 			return 0;
@@ -164,7 +154,7 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 	 */
 	public static int getRequiredXP(ItemStack stack) {
 		int baseCost = stack.getItem() instanceof BlockItem ? BASE_BLOCK_COST : BASE_ITEM_COST;
-		int materialMultiplier = getMaterialMultiplier(stack.getItem());
+		int materialMultiplier = stack.getItem() instanceof ToolItem ? 3 : 1;
 		int rarityMultiplier = getRarityXPMultiplier(stack.getRarity());
 		int nbtCost = getNbtXPCost(stack);
 		return (baseCost * materialMultiplier * rarityMultiplier) + nbtCost;
@@ -249,7 +239,7 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 			// Lure nearby vacant XP orbs
 			blockEntity.lureXPOrbs(world, pos);
 			// If the machine has enough XP, start the printing process
-			if (blockEntity.xp >= blockEntity.requiredXP) {
+			if (!blockEntity.isEmpty() && blockEntity.xp >= blockEntity.requiredXP) {
 				blockEntity.startPrinting(world, pos, state);
 			}
 		}

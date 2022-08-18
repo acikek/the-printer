@@ -4,6 +4,7 @@ import com.acikek.theprinter.advancement.PrinterUsedCriterion;
 import com.acikek.theprinter.block.PrinterBlock;
 import com.acikek.theprinter.block.PrinterBlockEntity;
 import com.acikek.theprinter.sound.ModSoundEvents;
+import com.acikek.theprinter.world.PrinterRuleReloader;
 import net.minecraft.util.Identifier;
 import org.quiltmc.loader.api.ModContainer;
 import org.quiltmc.qsl.base.api.entrypoint.ModInitializer;
@@ -27,5 +28,6 @@ public class ThePrinter implements ModInitializer {
 		PrinterBlockEntity.register();
 		PrinterUsedCriterion.register();
 		ModSoundEvents.register();
+		PrinterRuleReloader.register();
 	}
 }
