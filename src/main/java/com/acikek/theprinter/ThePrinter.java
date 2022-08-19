@@ -5,9 +5,8 @@ import com.acikek.theprinter.block.PrinterBlock;
 import com.acikek.theprinter.block.PrinterBlockEntity;
 import com.acikek.theprinter.sound.ModSoundEvents;
 import com.acikek.theprinter.world.PrinterRuleReloader;
+import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.Identifier;
-import org.quiltmc.loader.api.ModContainer;
-import org.quiltmc.qsl.base.api.entrypoint.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +21,7 @@ public class ThePrinter implements ModInitializer {
 	public static final Logger LOGGER = LoggerFactory.getLogger(ID);
 
 	@Override
-	public void onInitialize(ModContainer mod) {
+	public void onInitialize() {
 		LOGGER.info("The Printer - Have your XP ready!");
 		PrinterBlock.register();
 		PrinterBlockEntity.register();

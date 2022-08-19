@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "id": "theprinter",
+  "version": "${version}",
+  "name": "The Printer",
+  "description": "This is an example description! Tell everyone what your mod is about!",
+  "authors": [
+    "acikek",
+    "VirtuaLilith",
+    "Trudle",
+    "Jeb_Kerm"
+  ],
+  "contact": {
+    "homepage": "https://github.com/acikek/the-printer",
+    "sources": "https://github.com/acikek/the-printer",
+    "issues": "https://github.com/acikek/the-printer/issues",
+    "discord": "https://discord.gg/QYymKz84tR"
+  },
+  "license": "MIT",
+  "icon": "assets/theprinter/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.acikek.theprinter.ThePrinter"
+    ],
+    "client": [
+      "com.acikek.theprinter.client.ThePrinterClient"
+    ]
+  },
+  "mixins": [
+    "theprinter.mixins.json"
+  ],
+  "accessWidener": "theprinter.accesswidener",
+  "depends": {
+    "fabricloader": ">=0.14.6",
+    "fabric": "*",
+    "minecraft": "~1.19",
+    "java": ">=17"
+  }
+}

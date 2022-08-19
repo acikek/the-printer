@@ -2,6 +2,9 @@ package com.acikek.theprinter.block;
 
 import com.acikek.theprinter.ThePrinter;
 import com.acikek.theprinter.sound.ModSoundEvents;
+import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
@@ -29,9 +32,6 @@ import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
-import org.quiltmc.qsl.block.extensions.api.QuiltBlockSettings;
-import org.quiltmc.qsl.item.setting.api.QuiltItemSettings;
-import org.quiltmc.qsl.networking.api.PlayerLookup;
 
 public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityProvider {
 
@@ -39,7 +39,7 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 	public static final BooleanProperty PRINTING = BooleanProperty.of("printing");
 	public static final BooleanProperty FINISHED = BooleanProperty.of("finished");
 
-	public static final Settings SETTINGS = QuiltBlockSettings.of(Material.METAL)
+	public static final Settings SETTINGS = FabricBlockSettings.of(Material.METAL)
 			.strength(6.0f, 6.0f)
 			.luminance(value -> value.get(PRINTING) ? 9 : value.get(ON) ? 6 : 1);
 
@@ -152,7 +152,7 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 	public static void register() {
 		Identifier id = ThePrinter.id("the_printer");
 		Registry.register(Registry.BLOCK, id, INSTANCE);
-		Registry.register(Registry.ITEM, id, new BlockItem(INSTANCE, new QuiltItemSettings()
+		Registry.register(Registry.ITEM, id, new BlockItem(INSTANCE, new FabricItemSettings()
 				.group(ItemGroup.DECORATIONS)
 				.rarity(Rarity.RARE)));
 	}

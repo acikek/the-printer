@@ -7,6 +7,7 @@ import com.acikek.theprinter.sound.ModSoundEvents;
 import com.acikek.theprinter.util.ImplementedInventory;
 import com.acikek.theprinter.util.PrinterExperienceOrbEntity;
 import com.udojava.evalex.Expression;
+import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
@@ -37,7 +38,6 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
-import org.quiltmc.qsl.block.entity.api.QuiltBlockEntityTypeBuilder;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -129,7 +129,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 			xp = 0;
 		}
 	}
-	
+
 	public void removeItem(World world, BlockPos pos, PlayerEntity player) {
 		ItemStack removed = removeStack(0);
 		if (!player.isCreative()) {
@@ -366,7 +366,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		BLOCK_ENTITY_TYPE = Registry.register(
 				Registry.BLOCK_ENTITY_TYPE,
 				ThePrinter.id("printer_block_entity"),
-				QuiltBlockEntityTypeBuilder.create(PrinterBlockEntity::new, PrinterBlock.INSTANCE).build()
+				FabricBlockEntityTypeBuilder.create(PrinterBlockEntity::new, PrinterBlock.INSTANCE).build()
 		);
 	}
 }

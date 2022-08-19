@@ -5,7 +5,15 @@ import com.acikek.theprinter.data.PrinterRule;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.PacketSender;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.resource.AutoCloseableResourceManager;
 import net.minecraft.resource.JsonDataLoader;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
@@ -15,20 +23,15 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.profiler.Profiler;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.quiltmc.qsl.networking.api.PacketByteBufs;
-import org.quiltmc.qsl.networking.api.PacketSender;
-import org.quiltmc.qsl.networking.api.ServerPlayConnectionEvents;
-import org.quiltmc.qsl.networking.api.ServerPlayNetworking;
-import org.quiltmc.qsl.resource.loader.api.ResourceLoader;
-import org.quiltmc.qsl.resource.loader.api.ResourceLoaderEvents;
-import org.quiltmc.qsl.resource.loader.api.reloader.IdentifiableResourceReloader;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class PrinterRuleReloader extends JsonDataLoader implements IdentifiableResourceReloader, ResourceLoaderEvents.EndDataPackReload, ServerPlayConnectionEvents.Join {
+public class PrinterRuleReloader extends JsonDataLoader implements
+		IdentifiableResourceReloadListener,
+		ServerLifecycleEvents.EndDataPackReload,
+		ServerPlayConnectionEvents.Join {
 
 	public static final Identifier ID = ThePrinter.id("printer_rules");
 
@@ -37,7 +40,7 @@ public class PrinterRuleReloader extends JsonDataLoader implements IdentifiableR
 	}
 
 	@Override
-	public @NotNull Identifier getQuiltId() {
+	public @NotNull Identifier getFabricId() {
 		return ID;
 	}
 
@@ -78,7 +81,7 @@ public class PrinterRuleReloader extends JsonDataLoader implements IdentifiableR
 	}
 
 	@Override
-	public void onEndDataPackReload(@Nullable MinecraftServer server, ResourceManager resourceManager, @Nullable Throwable error) {
+	public void endDataPackReload(MinecraftServer server, AutoCloseableResourceManager resourceManager, boolean success) {
 		if (server == null) {
 			return;
 		}
@@ -98,8 +101,8 @@ public class PrinterRuleReloader extends JsonDataLoader implements IdentifiableR
 
 	public static void register() {
 		PrinterRuleReloader reloader = new PrinterRuleReloader();
-		ResourceLoader.get(ResourceType.SERVER_DATA).registerReloader(reloader);
-		ResourceLoaderEvents.END_DATA_PACK_RELOAD.register(reloader);
+		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(reloader);
+		ServerLifecycleEvents.END_DATA_PACK_RELOAD.register(reloader);
 		ServerPlayConnectionEvents.JOIN.register(reloader);
 	}
 }
