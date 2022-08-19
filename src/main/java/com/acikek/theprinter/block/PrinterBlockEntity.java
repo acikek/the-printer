@@ -13,6 +13,7 @@ import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventories;
+import net.minecraft.inventory.SidedInventory;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -31,6 +32,7 @@ import net.minecraft.util.Rarity;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
@@ -42,7 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class PrinterBlockEntity extends BlockEntity implements ImplementedInventory {
+public class PrinterBlockEntity extends BlockEntity implements SidedInventory, ImplementedInventory {
 
 	public static final int BASE_ITEM_COST = 55;
 	public static final int BASE_BLOCK_COST = 91;
@@ -86,19 +88,14 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 		return 1;
 	}
 
-	public void setStack(int slot, ItemStack handStack, int count) {
-		ItemStack copy = handStack.copy();
-		copy.setCount(count);
-		setStack(slot, copy);
-	}
-
 	public void addItem(PlayerEntity player, ItemStack handStack) {
 		rules = PrinterRule.getMatchingRules(handStack);
 		requiredXP = Math.max(1, getRequiredXP(handStack));
 		requiredTicks = requiredXP * 3;
 		int stackCount = Math.min(handStack.getCount(), getMaxStackCount(handStack));
-		setStack(0, handStack, stackCount);
-		setStack(1, handStack, stackCount);
+		ItemStack copy = handStack.copy();
+		copy.setCount(stackCount);
+		setStack(0, copy);
 		if (!player.isCreative()) {
 			handStack.decrement(stackCount);
 		}
@@ -111,36 +108,39 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 		}
 	}
 
-	/**
-	 * Removes an item from the inventory.<br>
-	 * If the item was printed, doesn't remove the item. Otherwise, removes the item, drops any leftover experience, and resets values.
-	 * Either way, if the player isn't in creative mode, gives them the target item.<br>
-	 * If the item was printed, also triggers {@link com.acikek.theprinter.advancement.PrinterUsedCriterion}.
-	 *
-	 * @see	PrinterBlockEntity#tryDropXP(ServerWorld, BlockPos)
-	 * @param printed Whether the printed item is being removed.
-	 */
-	public void removeItem(World world, BlockPos pos, PlayerEntity player, boolean printed) {
-		ItemStack removed = printed ? getStack(1) : removeStack(0);
-		if (printed && player instanceof ServerPlayerEntity serverPlayer) {
-			PrinterUsedCriterion.INSTANCE.trigger(serverPlayer, requiredXP, requiredTicks, removed, removed.getRarity());
+	public void removePrintedItem(World world, BlockPos pos, BlockState state, PlayerEntity player) {
+		ItemStack stack = getStack(1);
+		if (player != null && !stack.isEmpty()) {
+			if (player instanceof ServerPlayerEntity serverPlayer) {
+				PrinterUsedCriterion.INSTANCE.trigger(serverPlayer, requiredXP, requiredTicks, stack, stack.getRarity());
+			}
+			if (!player.isCreative()) {
+				ItemStack copy = stack.copy();
+				if (copy.isOf(Items.PAPER)) {
+					String key = "message.theprinter.paper_" + (world.random.nextInt(PAPER_MESSAGE_COUNT) + 1);
+					copy.setCustomName(Text.translatable(key));
+				}
+				player.giveItemStack(stack);
+			}
+			setStack(1, ItemStack.EMPTY);
 		}
+		if (stack.isEmpty()) {
+			world.setBlockState(pos, state.with(PrinterBlock.FINISHED, false));
+			xp = 0;
+		}
+	}
+	
+	public void removeItem(World world, BlockPos pos, PlayerEntity player) {
+		ItemStack removed = removeStack(0);
 		if (!player.isCreative()) {
-			ItemStack copy = removed.copy();
-			if (printed && removed.isOf(Items.PAPER)) {
-				String key = "message.theprinter.paper_" + (world.random.nextInt(PAPER_MESSAGE_COUNT) + 1);
-				copy.setCustomName(Text.translatable(key));
-			}
-			player.giveItemStack(copy);
+			player.giveItemStack(removed);
 		}
-		if (!printed) {
-			if (world instanceof ServerWorld serverWorld) {
-				tryDropXP(serverWorld, pos);
-			}
-			rules = null;
-			requiredXP = -1;
-			requiredTicks = -1;
+		if (world instanceof ServerWorld serverWorld) {
+			tryDropXP(serverWorld, pos);
 		}
+		rules = null;
+		requiredXP = -1;
+		requiredTicks = -1;
 		xp = 0;
 	}
 
@@ -249,6 +249,7 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 
 	public void startPrinting(World world, BlockPos pos, BlockState state) {
 		world.setBlockState(pos, state.with(PrinterBlock.PRINTING, true));
+		setStack(1, getStack(0).copy());
 		// Add one to the tick offset since the sound will begin next tick
 		startOffset = getTickOffset(world) + 1;
 	}
@@ -294,6 +295,34 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 	@Override
 	public DefaultedList<ItemStack> getItems() {
 		return items;
+	}
+
+	@Override
+	public int[] getAvailableSlots(Direction side) {
+		if (side == Direction.DOWN) {
+			return new int[] { 1 };
+		}
+		return new int[0];
+	}
+
+	@Override
+	public boolean canInsert(int slot, ItemStack stack, @Nullable Direction dir) {
+		return false;
+	}
+
+	@Override
+	public boolean canExtract(int slot, ItemStack stack, Direction dir) {
+		return dir == Direction.DOWN && getCachedState().get(PrinterBlock.FINISHED);
+	}
+
+	@Override
+	public ItemStack removeStack(int slot, int count) {
+		if (slot == 0) {
+			return ItemStack.EMPTY;
+		}
+		ItemStack stack = ImplementedInventory.super.removeStack(slot, count);
+		removePrintedItem(world, pos, getCachedState(), null);
+		return stack;
 	}
 
 	@Override
