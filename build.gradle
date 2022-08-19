@@ -26,7 +26,7 @@ dependencies {
 
 	modImplementation libs.quilted.fabric.api
 
-	modCompileOnly 'com.udojava:EvalEx:2.7'
+	modImplementation include("com.udojava:EvalEx:2.7")
 }
 
 processResources {

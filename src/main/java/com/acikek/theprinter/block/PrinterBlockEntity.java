@@ -2,9 +2,11 @@ package com.acikek.theprinter.block;
 
 import com.acikek.theprinter.ThePrinter;
 import com.acikek.theprinter.advancement.PrinterUsedCriterion;
+import com.acikek.theprinter.data.PrinterRule;
 import com.acikek.theprinter.sound.ModSoundEvents;
 import com.acikek.theprinter.util.ImplementedInventory;
 import com.acikek.theprinter.util.PrinterExperienceOrbEntity;
+import com.udojava.evalex.Expression;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
@@ -12,7 +14,6 @@ import net.minecraft.entity.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventories;
 import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ToolItem;
 import net.minecraft.nbt.NbtCompound;
@@ -23,6 +24,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Rarity;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
@@ -33,7 +35,10 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import org.quiltmc.qsl.block.entity.api.QuiltBlockEntityTypeBuilder;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class PrinterBlockEntity extends BlockEntity implements ImplementedInventory {
 
@@ -49,12 +54,13 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 	/**
 	 * The printer's inventory.
 	 * <p>
-	 * The first stack will show up on the screen. Its quantity should be limited to {@code 1}, but in all other ways a copy of the input stack.<br>
-	 * The second stack will render above the machine as it is printing the item. Its quantity should <bold>not</bold> be limited, but modifications are allowed.
+	 * The first stack will show up on the screen. Its should be an exact copy of the input stack..<br>
+	 * The second stack will render above the machine as it is printing the item. It is allowed to differ from the original stack.
 	 * </p>
 	 */
 	public DefaultedList<ItemStack> items = DefaultedList.ofSize(2, ItemStack.EMPTY);
 
+	public List<Map.Entry<Identifier, PrinterRule>> rules;
 	public int xp = 0;
 	public int requiredXP = -1;
 	public int progress = 0;
@@ -68,7 +74,11 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 		orbDepositArea = Box.of(center, 6.0, 3.5, 6.0);
 	}
 
-	public static int getMaxStackCount(ItemStack stack) {
+	public int getMaxStackCount(ItemStack stack) {
+		var sizeRules = PrinterRule.filterByType(rules, PrinterRule.Type.SIZE, stack);
+		if (!sizeRules.isEmpty()) {
+			return sizeRules.get(0).getValue().size.orElse(1);
+		}
 		return 1;
 	}
 
@@ -79,12 +89,14 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 	}
 
 	public void addItem(PlayerEntity player, ItemStack handStack) {
-		requiredXP = getRequiredXP(handStack);
+		rules = PrinterRule.getMatchingRules(handStack);
+		requiredXP = Math.max(1, getRequiredXP(handStack));
 		requiredTicks = requiredXP * 3;
-		setStack(0, handStack, 1);
-		setStack(1, handStack, getMaxStackCount(handStack));
+		int stackCount = Math.min(handStack.getCount(), getMaxStackCount(handStack));
+		setStack(0, handStack, stackCount);
+		setStack(1, handStack, stackCount);
 		if (!player.isCreative()) {
-			handStack.decrement(1);
+			handStack.decrement(stackCount);
 		}
 	}
 
@@ -113,6 +125,7 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 			if (world instanceof ServerWorld serverWorld) {
 				tryDropXP(serverWorld, pos);
 			}
+			rules = null;
 			requiredXP = -1;
 			requiredTicks = -1;
 		}
@@ -148,16 +161,34 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 
 	/**
 	 * Calculates the required experience cost for a given stack.
-	 *
-	 * TODO: Incorporate advancements
-	 * TODO: Custom override behavior
 	 */
-	public static int getRequiredXP(ItemStack stack) {
+	public static int getBaseXP(ItemStack stack) {
 		int baseCost = stack.getItem() instanceof BlockItem ? BASE_BLOCK_COST : BASE_ITEM_COST;
 		int materialMultiplier = stack.getItem() instanceof ToolItem ? 3 : 1;
 		int rarityMultiplier = getRarityXPMultiplier(stack.getRarity());
 		int nbtCost = getNbtXPCost(stack);
 		return (baseCost * materialMultiplier * rarityMultiplier) + nbtCost;
+	}
+
+	public int getRequiredXP(ItemStack stack) {
+		var overrides = PrinterRule.filterByType(rules, PrinterRule.Type.OVERRIDE, stack);
+		if (!overrides.isEmpty()) {
+			return overrides.get(0).getValue().override.orElse(0);
+		}
+		int baseXP = getBaseXP(stack);
+		var modifiers = PrinterRule.filterByType(rules, PrinterRule.Type.OVERRIDE, null);
+		if (!modifiers.isEmpty()) {
+			double result = baseXP;
+			List<Expression> expressions = modifiers.stream()
+					.map(rule -> rule.getValue().expression)
+					.filter(Objects::nonNull)
+					.toList();
+			for (Expression expression : expressions) {
+				result = expression.with("value", BigDecimal.valueOf(result)).eval().doubleValue();
+			}
+			return (int) result;
+		}
+		return baseXP;
 	}
 
 	public static boolean canDepositXP(PlayerEntity player) {
@@ -260,6 +291,7 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 	public void readNbt(NbtCompound nbt) {
 		super.readNbt(nbt);
 		Inventories.readNbt(nbt, items);
+		rules = PrinterRule.readNbt(nbt);
 		xp = nbt.getInt("XP");
 		requiredXP = nbt.getInt("RequiredXP");
 		progress = nbt.getInt("Progress");
@@ -270,6 +302,9 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 	@Override
 	protected void writeNbt(NbtCompound nbt) {
 		Inventories.writeNbt(nbt, items);
+		if (rules != null) {
+			PrinterRule.writeNbt(nbt, rules);
+		}
 		nbt.putInt("XP", xp);
 		nbt.putInt("RequiredXP", requiredXP);
 		nbt.putInt("Progress", progress);
