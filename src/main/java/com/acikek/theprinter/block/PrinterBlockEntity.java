@@ -66,6 +66,7 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 	public int progress = 0;
 	public int requiredTicks = -1;
 	public int startOffset = 0;
+	public int endOffset = -1;
 
 	public PrinterBlockEntity(BlockPos blockPos, BlockState blockState) {
 		super(BLOCK_ENTITY_TYPE, blockPos, blockState);

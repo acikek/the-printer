@@ -63,14 +63,20 @@ public class PrinterBlockEntityRenderer implements BlockEntityRenderer<PrinterBl
 		matrices.pop();
 	}
 
-	public void renderPrintingStack(ItemStack stack, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int lightAbove, int overlay, int seed, float progress, boolean finished) {
+	public static float getAngle(float tickDelta, int offset) {
+		if (ThePrinterClient.renderTicks == offset) {
+			return 0.0f;
+		}
+		return MathHelper.TAU * ((ThePrinterClient.renderTicks - offset % 120 + tickDelta) / 120.0f);
+	}
+
+	public void renderPrintingStack(ItemStack stack, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int lightAbove, int overlay, int seed, float progress, boolean finished, int offset) {
 		matrices.push();
 		matrices.translate(0.5, 1.4, 0.5);
-		float angle = MathHelper.TAU * ((ThePrinterClient.renderTicks % 120 + tickDelta) / 120.0f);
 		if (finished) {
-			matrices.translate(0.0, MathHelper.sin(angle) * 0.1f, 0.0);
+			matrices.translate(0.0, MathHelper.sin(getAngle(tickDelta, offset)) * 0.1f, 0.0);
 		}
-		matrices.multiply(Vec3f.POSITIVE_Y.getRadialQuaternion(angle));
+		matrices.multiply(Vec3f.POSITIVE_Y.getRadialQuaternion(getAngle(tickDelta, 0)));
 		matrices.scale(1.3f, 1.3f, 1.3f);
 		VertexConsumerProvider vcp = !finished && vertexConsumers instanceof VertexConsumerProvider.Immediate immediate
 				? new TranslucentVertexConsumerProvider(immediate, progress)
@@ -98,10 +104,17 @@ public class PrinterBlockEntityRenderer implements BlockEntityRenderer<PrinterBl
 			renderScreenStack(entity.getStack(0), matrices, vertexConsumers, lightAbove, overlay, seed);
 		}
 		matrices.pop();
-		// Render top printing stack
+		// Adjust printing end tick offsets for smoother transitions
 		boolean finished = state.get(PrinterBlock.FINISHED);
+		if (finished && entity.endOffset == -1) {
+			entity.endOffset = ThePrinterClient.renderTicks;
+		}
+		else if (!finished && entity.endOffset != -1) {
+			entity.endOffset = -1;
+		}
+		// Render top printing stack
 		if ((state.get(PrinterBlock.PRINTING) || finished) && !entity.getStack(0).isEmpty()) {
-			renderPrintingStack(entity.getStack(0), tickDelta, matrices, vertexConsumers, lightAbove, overlay, seed, finished ? 1.0f : ((float) entity.progress / entity.requiredTicks), finished);
+			renderPrintingStack(entity.getStack(0), tickDelta, matrices, vertexConsumers, lightAbove, overlay, seed, finished ? 1.0f : ((float) entity.progress / entity.requiredTicks), finished, entity.endOffset);
 		}
 		matrices.pop();
 	}
