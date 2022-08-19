@@ -1,6 +1,7 @@
 package com.acikek.theprinter.data;
 
 import com.acikek.theprinter.ThePrinter;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.udojava.evalex.Expression;
 import net.minecraft.item.ItemStack;
@@ -32,14 +33,14 @@ public class PrinterRule {
 
 	public static Map<Identifier, PrinterRule> RULES = new HashMap<>();
 
-	public Ingredient input;
+	public List<Ingredient> input;
 	public Optional<Integer> override;
 	public Optional<String> modifier;
 	public Optional<Integer> size;
 	public Expression expression;
 	public List<Type> types = new ArrayList<>();
 
-	public PrinterRule(Ingredient input, Optional<Integer> override, Optional<String> modifier, Optional<Integer> size) {
+	public PrinterRule(List<Ingredient> input, Optional<Integer> override, Optional<String> modifier, Optional<Integer> size) {
 		this.input = input;
 		this.override = override;
 		this.modifier = modifier;
@@ -68,7 +69,7 @@ public class PrinterRule {
 			return Collections.emptyList();
 		}
 		return RULES.entrySet().stream()
-				.filter(pair -> pair.getValue().input.test(stack))
+				.filter(pair -> pair.getValue().input.stream().anyMatch(ingredient -> ingredient.test(stack)))
 				.toList();
 	}
 
@@ -116,7 +117,11 @@ public class PrinterRule {
 	}
 
 	public static PrinterRule fromJson(JsonObject obj) {
-		Ingredient input = Ingredient.fromJson(JsonHelper.getObject(obj, "input"));
+		List<Ingredient> input = new ArrayList<>();
+		for (JsonElement element : JsonHelper.getArray(obj, "input")) {
+			JsonObject object = JsonHelper.asObject(element, "input element");
+			input.add(Ingredient.fromJson(object));
+		}
 		int override = JsonHelper.getInt(obj, "override", -1);
 		String modifier = JsonHelper.getString(obj, "modifier", null);
 		int size = JsonHelper.getInt(obj, "size", -1);
@@ -129,7 +134,7 @@ public class PrinterRule {
 	}
 
 	public static PrinterRule read(PacketByteBuf buf) {
-		Ingredient input = Ingredient.fromPacket(buf);
+		List<Ingredient> input = buf.readList(Ingredient::fromPacket);
 		Optional<Integer> override = buf.readOptional(PacketByteBuf::readInt);
 		Optional<String> modifier = buf.readOptional(PacketByteBuf::readString);
 		Optional<Integer> size = buf.readOptional(PacketByteBuf::readInt);
@@ -137,7 +142,7 @@ public class PrinterRule {
 	}
 
 	public void write(PacketByteBuf buf) {
-		input.write(buf);
+		buf.writeCollection(input, (entryBuf, ingredient) -> ingredient.write(entryBuf));
 		buf.writeOptional(override, PacketByteBuf::writeInt);
 		buf.writeOptional(modifier, PacketByteBuf::writeString);
 		buf.writeOptional(size, PacketByteBuf::writeInt);
