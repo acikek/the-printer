@@ -201,7 +201,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 	}
 
 	public static boolean canDepositXP(PlayerEntity player) {
-		return player.isSneaking() && player.experienceLevel != 0 && player.experienceProgress > 0.0f;
+		return player.isSneaking() && (player.experienceLevel != 0 || player.experienceProgress > 0.0f);
 	}
 
 	public static boolean canDepositXP(ExperienceOrbEntity orb) {
