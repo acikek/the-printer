@@ -8,5 +8,11 @@
   "advancements.theprinter.print_rare_item.description": "Print an expensive rare item",
   "subtitle.theprinter.startup": "Printer starts up",
   "subtitle.theprinter.shutdown": "Printer shuts down",
-  "subtitle.theprinter.printing": "Printing"
+  "subtitle.theprinter.printing": "Printing",
+  "message.theprinter.paper_1": "Remember to refill the ink!",
+  "message.theprinter.paper_2": "Simple printer set-up guide",
+  "message.theprinter.paper_3": "We print... for Science!",
+  "message.theprinter.paper_4": "Worrying: Cutting-edge printer can print itself",
+  "message.theprinter.paper_5": "This machine costs less than its ink...",
+  "message.theprinter.paper_6": "Printers will replace you!"
 }

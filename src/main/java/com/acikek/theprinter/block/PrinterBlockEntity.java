@@ -15,6 +15,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventories;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.item.ToolItem;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.Packet;
@@ -24,6 +25,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Rarity;
 import net.minecraft.util.collection.DefaultedList;
@@ -45,6 +47,7 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 	public static final int BASE_ITEM_COST = 55;
 	public static final int BASE_BLOCK_COST = 91;
 	public static final int PRINTING_INTERVAL = 180;
+	public static final int PAPER_MESSAGE_COUNT = 6;
 
 	public static BlockEntityType<PrinterBlockEntity> BLOCK_ENTITY_TYPE;
 
@@ -119,8 +122,16 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 	 */
 	public void removeItem(World world, BlockPos pos, PlayerEntity player, boolean printed) {
 		ItemStack removed = printed ? getStack(1) : removeStack(0);
+		if (printed && player instanceof ServerPlayerEntity serverPlayer) {
+			PrinterUsedCriterion.INSTANCE.trigger(serverPlayer, requiredXP, requiredTicks, removed, removed.getRarity());
+		}
 		if (!player.isCreative()) {
-			player.giveItemStack(removed);
+			ItemStack copy = removed.copy();
+			if (printed && removed.isOf(Items.PAPER)) {
+				String key = "message.theprinter.paper_" + (world.random.nextInt(PAPER_MESSAGE_COUNT) + 1);
+				copy.setCustomName(Text.translatable(key));
+			}
+			player.giveItemStack(copy);
 		}
 		if (!printed) {
 			if (world instanceof ServerWorld serverWorld) {
@@ -129,9 +140,6 @@ public class PrinterBlockEntity extends BlockEntity implements ImplementedInvent
 			rules = null;
 			requiredXP = -1;
 			requiredTicks = -1;
-		}
-		else if (player instanceof ServerPlayerEntity serverPlayer) {
-			PrinterUsedCriterion.INSTANCE.trigger(serverPlayer, requiredXP, requiredTicks, removed, removed.getRarity());
 		}
 		xp = 0;
 	}
