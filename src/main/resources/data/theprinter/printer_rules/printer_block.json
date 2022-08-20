@@ -1,8 +1,6 @@
 {
-  "input": [
-    {
-      "item": "theprinter:the_printer"
-    }
-  ],
+  "input": {
+    "item": "theprinter:the_printer"
+  },
   "modifier": "value * 8"
 }

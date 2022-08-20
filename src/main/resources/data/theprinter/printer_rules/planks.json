@@ -1,8 +1,6 @@
 {
-  "input": [
-    {
-      "tag": "minecraft:planks"
-    }
-  ],
+  "input": {
+    "tag": "minecraft:planks"
+  },
   "size": 32
 }
