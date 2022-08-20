@@ -56,9 +56,6 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 			VoxelShapes.cuboid(0.0, 0.875, 0.0, 1.0, 1.0, 1.0)
 	);
 
-	public static GameRules.Key<GameRules.BooleanRule> ENABLED;
-	public static final Identifier GAMERULE_CHANGED = ThePrinter.id("printer_enabled_gamerule");
-
 	public static final PrinterBlock INSTANCE = new PrinterBlock();
 
 	public PrinterBlock() {
@@ -166,21 +163,5 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 		Registry.register(Registry.ITEM, id, new BlockItem(INSTANCE, new FabricItemSettings()
 				.group(ItemGroup.DECORATIONS)
 				.rarity(Rarity.RARE)));
-	}
-
-	public static void syncGameRule(MinecraftServer server, GameRules.BooleanRule rule) {
-		for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-			PacketByteBuf buf = PacketByteBufs.create();
-			buf.writeBoolean(rule.get());
-			ServerPlayNetworking.send(player, GAMERULE_CHANGED, buf);
-		}
-	}
-
-	public static void registerGameRule() {
-		ENABLED = GameRuleRegistry.register(
-				"enablePrinter",
-				GameRules.Category.MISC,
-				GameRuleFactory.createBooleanRule(true, PrinterBlock::syncGameRule)
-		);
 	}
 }

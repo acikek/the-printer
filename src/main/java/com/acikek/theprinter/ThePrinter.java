@@ -4,6 +4,7 @@ import com.acikek.theprinter.advancement.PrinterUsedCriterion;
 import com.acikek.theprinter.block.PrinterBlock;
 import com.acikek.theprinter.block.PrinterBlockEntity;
 import com.acikek.theprinter.sound.ModSoundEvents;
+import com.acikek.theprinter.world.PrinterEnabledGameRule;
 import com.acikek.theprinter.world.PrinterRuleReloader;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
@@ -27,10 +28,10 @@ public class ThePrinter implements ModInitializer {
 	public void onInitialize() {
 		LOGGER.info("The Printer - Have your XP ready!");
 		PrinterBlock.register();
-		PrinterBlock.registerGameRule();
 		PrinterBlockEntity.register();
 		PrinterUsedCriterion.register();
 		ModSoundEvents.register();
+		PrinterEnabledGameRule.register();
 		PrinterRuleReloader.register();
 		registerDatapack();
 	}

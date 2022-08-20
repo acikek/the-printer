@@ -7,6 +7,7 @@ import com.acikek.theprinter.data.PrinterRule;
 import com.acikek.theprinter.sound.ModSoundEvents;
 import com.acikek.theprinter.util.ImplementedInventory;
 import com.acikek.theprinter.util.PrinterExperienceOrbEntity;
+import com.acikek.theprinter.world.PrinterEnabledGameRule;
 import com.udojava.evalex.Expression;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.block.BlockState;
@@ -93,7 +94,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		var enabledRules = PrinterRule.filterByType(rules, PrinterRule.Type.ENABLED, stack);
 		boolean gameruleEnabled = world.isClient()
 				? ThePrinterClient.printerEnabled
-				: world.getGameRules().getBoolean(PrinterBlock.ENABLED);
+				: world.getGameRules().getBoolean(PrinterEnabledGameRule.INSTANCE);
 		return enabledRules.isEmpty()
 				? gameruleEnabled
 				: enabledRules.get(0).getValue().enabled.orElse(gameruleEnabled);
