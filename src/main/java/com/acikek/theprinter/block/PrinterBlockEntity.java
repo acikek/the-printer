@@ -136,7 +136,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 					String key = "message.theprinter.paper_" + (world.random.nextInt(PAPER_MESSAGE_COUNT) + 1);
 					copy.setCustomName(Text.translatable(key));
 				}
-				player.giveItemStack(stack);
+				player.giveItemStack(copy);
 			}
 			setStack(1, ItemStack.EMPTY);
 		}
