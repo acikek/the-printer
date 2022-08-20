@@ -3,7 +3,7 @@
   "id": "theprinter",
   "version": "${version}",
   "name": "The Printer",
-  "description": "This is an example description! Tell everyone what your mod is about!",
+  "description": "Duplicate items at the cost of experience and time",
   "authors": [
     "acikek",
     "VirtuaLilith",
