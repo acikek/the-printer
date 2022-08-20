@@ -209,7 +209,10 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 					.filter(Objects::nonNull)
 					.toList();
 			for (Expression expression : expressions) {
-				result = expression.with("value", BigDecimal.valueOf(result)).eval().doubleValue();
+				result = expression
+						.with("value", BigDecimal.valueOf(result))
+						.with("size", BigDecimal.valueOf(stack.getCount()))
+						.eval().doubleValue();
 			}
 			return (int) result;
 		}
