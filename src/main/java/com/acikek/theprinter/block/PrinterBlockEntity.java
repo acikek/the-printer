@@ -233,10 +233,13 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		return amount;
 	}
 
-	public void depositXP(World world, int amount, float soundChance) {
+	public void depositXP(World world, BlockPos pos, int amount, float soundChance) {
 		xp += amount;
 		if (world.random.nextFloat() > soundChance) {
 			world.playSound(null, pos, SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.BLOCKS, 0.5f, world.random.nextFloat() + 0.5f);
+		}
+		if (world instanceof ServerWorld serverWorld) {
+			serverWorld.getChunkManager().markForUpdate(pos);
 		}
 	}
 
@@ -244,12 +247,12 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 	 * Searches for players within the {@link PrinterBlockEntity#playerDepositArea} that qualify {@link PrinterBlockEntity#canDepositXP(PlayerEntity)}
 	 * and takes some experience points from them, more if they're jumping.
 	 */
-	public void gatherXP(World world) {
+	public void gatherXP(World world, BlockPos pos) {
 		List<PlayerEntity> players = world.getEntitiesByClass(PlayerEntity.class, playerDepositArea, PrinterBlockEntity::canDepositXP);
 		for (PlayerEntity player : players) {
 			int amount = adjustAmount(player.isOnGround() ? 1 : 3);
 			player.addExperience(-amount);
-			depositXP(world, amount, player.isOnGround() ? 0.3f : 0.5f);
+			depositXP(world, pos, amount, player.isOnGround() ? 0.3f : 0.5f);
 		}
 	}
 
@@ -292,7 +295,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		if (PrinterBlock.canDepositXP(state)) {
 			// Every two ticks, gather XP from players
 			if (world.getTime() % 2 == 0) {
-				blockEntity.gatherXP(world);
+				blockEntity.gatherXP(world, pos);
 			}
 			// Lure nearby vacant XP orbs
 			blockEntity.lureXPOrbs(world, pos);

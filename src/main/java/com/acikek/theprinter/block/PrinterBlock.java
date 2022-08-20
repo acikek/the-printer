@@ -23,6 +23,7 @@ import net.minecraft.network.packet.s2c.play.StopSoundS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
@@ -47,6 +48,7 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 	public static final BooleanProperty FINISHED = BooleanProperty.of("finished");
 
 	public static final Settings SETTINGS = FabricBlockSettings.of(Material.METAL)
+			.sounds(BlockSoundGroup.METAL)
 			.strength(6.0f, 6.0f)
 			.luminance(value -> value.get(PRINTING) ? 9 : value.get(ON) ? 6 : 1);
 
