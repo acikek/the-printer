@@ -1,5 +1,6 @@
 {
   "block.theprinter.the_printer": "The Printer",
+  "gamerule.enablePrinter": "Enable The Printer",
   "advancements.theprinter.use_printer.title": "The Printer",
   "advancements.theprinter.use_printer.description": "Duplicate an item with The Printer",
   "advancements.theprinter.print_paper.title": "Overengineering",
