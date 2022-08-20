@@ -1,0 +1,19 @@
+{
+  "block.theprinter.the_printer": "La Impresora",
+  "gamerule.enablePrinter": "Permitir La Impresora",
+  "advancements.theprinter.use_printer.title": "La Impresora",
+  "advancements.theprinter.use_printer.description": "Duplica un ítem con La Impresora",
+  "advancements.theprinter.print_paper.title": "Sobreingeniería",
+  "advancements.theprinter.print_paper.description": "Imprime papel sólo para presumir",
+  "advancements.theprinter.print_rare_item.title": "Muy Económico",
+  "advancements.theprinter.print_rare_item.description": "Imprime un ítem caro y raro",
+  "subtitle.theprinter.startup": "Impresora empieza",
+  "subtitle.theprinter.shutdown": "Impresora se apaga",
+  "subtitle.theprinter.printing": "Imprimiendo",
+  "message.theprinter.paper_1": "¡Te acuerda de rellenar la tinta!",
+  "message.theprinter.paper_2": "Guía de preparación simple para una impresora",
+  "message.theprinter.paper_3": "Imprimimos... ¡para la Ciencia!",
+  "message.theprinter.paper_4": "Preocupante: impresora innovadora puede imprimir a sí mismo",
+  "message.theprinter.paper_5": "Esta máquina cuesta menos que su tinta...",
+  "message.theprinter.paper_6": "¡Las impresoras te reemplazarán!"
+}
