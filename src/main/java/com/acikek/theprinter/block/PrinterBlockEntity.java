@@ -60,7 +60,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 	/**
 	 * The printer's inventory.
 	 * <p>
-	 * The first stack will show up on the screen. Its should be an exact copy of the input stack..<br>
+	 * The first stack will show up on the screen. It should be an exact copy of the input stack..<br>
 	 * The second stack will render above the machine as it is printing the item. It is allowed to differ from the original stack.
 	 * </p>
 	 */
@@ -140,7 +140,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 			}
 			setStack(1, ItemStack.EMPTY);
 		}
-		if (stack.isEmpty()) {
+		if (getStack(1).isEmpty()) {
 			world.setBlockState(pos, state.with(PrinterBlock.FINISHED, false));
 			xp = 0;
 		}
@@ -184,9 +184,6 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		return nbt.getKeys().size() * 20;
 	}
 
-	/**
-	 * Calculates the required experience cost for a given stack.
-	 */
 	public static int getBaseXP(ItemStack stack) {
 		int baseCost = stack.getItem() instanceof BlockItem ? BASE_BLOCK_COST : BASE_ITEM_COST;
 		int materialMultiplier = stack.getItem() instanceof ToolItem ? 3 : 1;
