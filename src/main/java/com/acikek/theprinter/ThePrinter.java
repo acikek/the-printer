@@ -24,6 +24,7 @@ public class ThePrinter implements ModInitializer {
 	public void onInitialize() {
 		LOGGER.info("The Printer - Have your XP ready!");
 		PrinterBlock.register();
+		PrinterBlock.registerGameRule();
 		PrinterBlockEntity.register();
 		PrinterUsedCriterion.register();
 		ModSoundEvents.register();

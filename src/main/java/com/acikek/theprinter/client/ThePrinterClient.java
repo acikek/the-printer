@@ -17,6 +17,7 @@ import net.minecraft.network.PacketByteBuf;
 public class ThePrinterClient implements ClientModInitializer {
 
 	public static int renderTicks;
+	public static boolean printerEnabled;
 
 	@Override
 	public void onInitializeClient() {
@@ -24,6 +25,10 @@ public class ThePrinterClient implements ClientModInitializer {
 		PrinterBlockEntityRenderer.register();
 		ClientTickEvents.START_WORLD_TICK.register(world -> tick());
 		ClientPlayNetworking.registerGlobalReceiver(PrinterRuleReloader.ID, ThePrinterClient::reloadRule);
+		ClientPlayNetworking.registerGlobalReceiver(
+				PrinterBlock.GAMERULE_CHANGED,
+				(client, handler, buf, responseSender) -> printerEnabled = buf.readBoolean()
+		);
 	}
 
 	public static void tick() {

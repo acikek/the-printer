@@ -2,6 +2,7 @@ package com.acikek.theprinter.block;
 
 import com.acikek.theprinter.ThePrinter;
 import com.acikek.theprinter.advancement.PrinterUsedCriterion;
+import com.acikek.theprinter.client.ThePrinterClient;
 import com.acikek.theprinter.data.PrinterRule;
 import com.acikek.theprinter.sound.ModSoundEvents;
 import com.acikek.theprinter.util.ImplementedInventory;
@@ -88,8 +89,22 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		return 1;
 	}
 
-	public void addItem(PlayerEntity player, ItemStack handStack) {
+	public boolean isEnabled(World world, ItemStack stack) {
+		var enabledRules = PrinterRule.filterByType(rules, PrinterRule.Type.ENABLED, stack);
+		boolean gameruleEnabled = world.isClient()
+				? ThePrinterClient.printerEnabled
+				: world.getGameRules().getBoolean(PrinterBlock.ENABLED);
+		return enabledRules.isEmpty()
+				? gameruleEnabled
+				: enabledRules.get(0).getValue().enabled.orElse(gameruleEnabled);
+	}
+
+	public boolean addItem(World world, PlayerEntity player, ItemStack handStack) {
 		rules = PrinterRule.getMatchingRules(handStack);
+		boolean enabled = isEnabled(world, handStack);
+		if (!enabled) {
+			return false;
+		}
 		requiredXP = Math.max(1, getRequiredXP(handStack));
 		requiredTicks = requiredXP * 3;
 		int stackCount = Math.min(handStack.getCount(), getMaxStackCount(handStack));
@@ -99,6 +114,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		if (!player.isCreative()) {
 			handStack.decrement(stackCount);
 		}
+		return true;
 	}
 
 	public void tryDropXP(ServerWorld world, BlockPos pos) {

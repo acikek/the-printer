@@ -22,7 +22,8 @@ public class PrinterRule {
 
 		OVERRIDE(true),
 		MODIFIER(false),
-		SIZE(true);
+		SIZE(true),
+		ENABLED(true);
 
 		public final boolean exclusive;
 
@@ -37,14 +38,16 @@ public class PrinterRule {
 	public Optional<Integer> override;
 	public Optional<String> modifier;
 	public Optional<Integer> size;
+	public Optional<Boolean> enabled;
 	public Expression expression;
 	public List<Type> types = new ArrayList<>();
 
-	public PrinterRule(List<Ingredient> input, Optional<Integer> override, Optional<String> modifier, Optional<Integer> size) {
+	public PrinterRule(List<Ingredient> input, Optional<Integer> override, Optional<String> modifier, Optional<Integer> size, Optional<Boolean> enabled) {
 		this.input = input;
 		this.override = override;
 		this.modifier = modifier;
 		this.size = size;
+		this.enabled = enabled;
 		modifier.ifPresent(s -> expression = new Expression(s));
 		if (override.isPresent() || modifier.isPresent()) {
 			types.add(override.isPresent() ? Type.OVERRIDE : Type.MODIFIER);
@@ -52,14 +55,17 @@ public class PrinterRule {
 		if (size.isPresent()) {
 			types.add(Type.SIZE);
 		}
+		if (enabled.isPresent()) {
+			types.add(Type.ENABLED);
+		}
 	}
 
 	public boolean validate() {
+		if (types.isEmpty()) {
+			throw new IllegalStateException("rule must contain properties other than 'input'");
+		}
 		if (override.isPresent() && modifier.isPresent()) {
 			throw new IllegalStateException("'modifier' rule is mutually exclusive with 'override'");
-		}
-		if (override.isEmpty() && modifier.isEmpty() && size.isEmpty()) {
-			throw new IllegalStateException("rule must contain either 'override', 'modifier', or 'size'");
 		}
 		return true;
 	}
@@ -125,11 +131,13 @@ public class PrinterRule {
 		int override = JsonHelper.getInt(obj, "override", -1);
 		String modifier = JsonHelper.getString(obj, "modifier", null);
 		int size = JsonHelper.getInt(obj, "size", -1);
+		Boolean enabled = JsonHelper.hasBoolean(obj, "enabled") ? JsonHelper.getBoolean(obj, "enabled") : null;
 		return new PrinterRule(
 				input,
 				override == -1 ? Optional.empty() : Optional.of(override),
 				Optional.ofNullable(modifier),
-				size == -1 ? Optional.empty() : Optional.of(size)
+				size == -1 ? Optional.empty() : Optional.of(size),
+				Optional.ofNullable(enabled)
 		);
 	}
 
@@ -138,7 +146,8 @@ public class PrinterRule {
 		Optional<Integer> override = buf.readOptional(PacketByteBuf::readInt);
 		Optional<String> modifier = buf.readOptional(PacketByteBuf::readString);
 		Optional<Integer> size = buf.readOptional(PacketByteBuf::readInt);
-		return new PrinterRule(input, override, modifier, size);
+		Optional<Boolean> enabled = buf.readOptional(PacketByteBuf::readBoolean);
+		return new PrinterRule(input, override, modifier, size, enabled);
 	}
 
 	public void write(PacketByteBuf buf) {
@@ -146,5 +155,6 @@ public class PrinterRule {
 		buf.writeOptional(override, PacketByteBuf::writeInt);
 		buf.writeOptional(modifier, PacketByteBuf::writeString);
 		buf.writeOptional(size, PacketByteBuf::writeInt);
+		buf.writeOptional(enabled, PacketByteBuf::writeBoolean);
 	}
 }

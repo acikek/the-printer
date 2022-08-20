@@ -2,8 +2,12 @@ package com.acikek.theprinter.block;
 
 import com.acikek.theprinter.ThePrinter;
 import com.acikek.theprinter.sound.ModSoundEvents;
+import net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory;
+import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
@@ -14,7 +18,9 @@ import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.StopSoundS2CPacket;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -30,6 +36,7 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.BlockView;
+import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
@@ -48,6 +55,9 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 			VoxelShapes.cuboid(0.125, 0.75, 0.125, 0.875, 0.875, 0.875),
 			VoxelShapes.cuboid(0.0, 0.875, 0.0, 1.0, 1.0, 1.0)
 	);
+
+	public static GameRules.Key<GameRules.BooleanRule> ENABLED;
+	public static final Identifier GAMERULE_CHANGED = ThePrinter.id("printer_enabled_gamerule");
 
 	public static final PrinterBlock INSTANCE = new PrinterBlock();
 
@@ -78,12 +88,13 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 			SoundEvent event = null;
 			ItemStack handStack = player.getStackInHand(hand);
 			if (!handStack.isEmpty() && !on) {
-				world.setBlockState(pos, state.with(ON, true));
-				if (handStack.getItem() instanceof BlockItem blockItem) {
-					world.playSound(null, pos, blockItem.getBlock().getDefaultState().getSoundGroup().getPlaceSound(), SoundCategory.BLOCKS, 1.0f, 1.3f);
+				if (blockEntity.addItem(world, player, handStack)) {
+					world.setBlockState(pos, state.with(ON, true));
+					if (handStack.getItem() instanceof BlockItem blockItem) {
+						world.playSound(null, pos, blockItem.getBlock().getDefaultState().getSoundGroup().getPlaceSound(), SoundCategory.BLOCKS, 1.0f, 1.3f);
+					}
+					event = ModSoundEvents.STARTUP;
 				}
-				blockEntity.addItem(player, handStack);
-				event = ModSoundEvents.STARTUP;
 			}
 			else if (handStack.isEmpty() && !printing) {
 				if (finished) {
@@ -155,5 +166,21 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 		Registry.register(Registry.ITEM, id, new BlockItem(INSTANCE, new FabricItemSettings()
 				.group(ItemGroup.DECORATIONS)
 				.rarity(Rarity.RARE)));
+	}
+
+	public static void syncGameRule(MinecraftServer server, GameRules.BooleanRule rule) {
+		for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+			PacketByteBuf buf = PacketByteBufs.create();
+			buf.writeBoolean(rule.get());
+			ServerPlayNetworking.send(player, GAMERULE_CHANGED, buf);
+		}
+	}
+
+	public static void registerGameRule() {
+		ENABLED = GameRuleRegistry.register(
+				"enablePrinter",
+				GameRules.Category.MISC,
+				GameRuleFactory.createBooleanRule(true, PrinterBlock::syncGameRule)
+		);
 	}
 }
