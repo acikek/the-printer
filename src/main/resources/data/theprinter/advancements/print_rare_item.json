@@ -20,7 +20,9 @@
     "print_rare_item": {
       "trigger": "theprinter:printer_used",
       "conditions": {
-        "xp": 500,
+        "xp": {
+          "min": 350
+        },
         "rarity": "rare"
       }
     }
