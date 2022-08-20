@@ -1,0 +1,11 @@
+{
+  "input": [
+    {
+      "item": "minecraft:trident"
+    },
+    {
+      "item": "minecraft:amethyst_block"
+    }
+  ],
+  "modifier": "value * 6"
+}

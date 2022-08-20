@@ -1,0 +1,20 @@
+{
+  "input": [
+    {
+      "item": "minecraft:netherrack"
+    },
+    {
+      "tag": "minecraft:soul_fire_base_blocks"
+    },
+    {
+      "tag": "minecraft:leaves"
+    },
+    {
+      "tag": "minecraft:stone_bricks"
+    },
+    {
+      "tag": "minecraft:terracotta"
+    }
+  ],
+  "size": 32
+}

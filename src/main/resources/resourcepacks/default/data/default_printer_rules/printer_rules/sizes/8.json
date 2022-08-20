@@ -1,0 +1,11 @@
+{
+  "input": [
+    {
+      "item": "minecraft:copper_ingot"
+    },
+    {
+      "item": "minecraft:raw_copper"
+    }
+  ],
+  "size": 8
+}

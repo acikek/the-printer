@@ -1,0 +1,6 @@
+{
+  "input": {
+    "item": "minecraft:netherite_block"
+  },
+  "modifier": "value * 72"
+}

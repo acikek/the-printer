@@ -1,0 +1,6 @@
+{
+  "input": {
+    "item": "minecraft:iron_block"
+  },
+  "modifier": "value * 12"
+}

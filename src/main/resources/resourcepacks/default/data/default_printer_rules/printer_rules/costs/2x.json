@@ -1,0 +1,11 @@
+{
+  "input": [
+    {
+      "item": "minecraft:gold_ingot"
+    },
+    {
+      "item": "minecraft:golden_apple"
+    }
+  ],
+  "modifier": "value * 2"
+}

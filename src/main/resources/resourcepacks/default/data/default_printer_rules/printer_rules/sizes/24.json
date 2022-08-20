@@ -1,0 +1,14 @@
+{
+  "input": [
+    {
+      "item": "minecraft:nether_bricks"
+    },
+    {
+      "item": "minecraft:red_nether_bricks"
+    },
+    {
+      "item": "minecraft:blackstone"
+    }
+  ],
+  "size": 24
+}

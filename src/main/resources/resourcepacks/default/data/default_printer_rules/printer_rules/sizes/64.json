@@ -1,0 +1,14 @@
+{
+  "input": [
+    {
+      "tag": "minecraft:dirt"
+    },
+    {
+      "tag": "minecraft:sand"
+    },
+    {
+      "item": "minecraft:gravel"
+    }
+  ],
+  "size": 64
+}

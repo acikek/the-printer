@@ -1,0 +1,11 @@
+{
+  "input": [
+    {
+      "tag": "minecraft:planks"
+    },
+    {
+      "tag": "minecraft:flowers"
+    }
+  ],
+  "size": 16
+}

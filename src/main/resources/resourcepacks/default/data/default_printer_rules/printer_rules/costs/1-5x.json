@@ -1,0 +1,11 @@
+{
+  "input": [
+    {
+      "item": "minecraft:iron_ingot"
+    },
+    {
+      "item": "minecraft:amethyst_shard"
+    }
+  ],
+  "modifier": "value * 1.5"
+}

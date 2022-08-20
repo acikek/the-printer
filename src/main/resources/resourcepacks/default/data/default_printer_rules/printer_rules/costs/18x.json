@@ -1,0 +1,6 @@
+{
+  "input": {
+    "item": "minecraft:gold_block"
+  },
+  "modifier": "value * 18"
+}

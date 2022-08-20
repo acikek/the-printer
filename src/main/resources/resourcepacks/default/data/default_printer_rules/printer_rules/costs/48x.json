@@ -1,0 +1,6 @@
+{
+  "input": {
+    "item": "minecraft:diamond_block"
+  },
+  "modifier": "value * 48"
+}

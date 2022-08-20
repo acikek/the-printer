@@ -1,0 +1,6 @@
+{
+  "input": {
+    "item": "minecraft:copper_ingot"
+  },
+  "modifier": "value * 1.3"
+}

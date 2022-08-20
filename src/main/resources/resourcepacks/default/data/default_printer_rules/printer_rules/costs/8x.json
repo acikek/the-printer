@@ -1,0 +1,14 @@
+{
+  "input": [
+    {
+      "item": "theprinter:the_printer"
+    },
+    {
+      "item": "minecraft:nether_star"
+    },
+    {
+      "item": "minecraft:netherite_ingot"
+    }
+  ],
+  "modifier": "value * 8"
+}
