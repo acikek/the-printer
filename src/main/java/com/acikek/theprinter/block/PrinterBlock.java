@@ -87,13 +87,15 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 			SoundEvent event = null;
 			ItemStack handStack = player.getStackInHand(hand);
 			if (!handStack.isEmpty() && !on) {
-				if (blockEntity.addItem(world, player, handStack)) {
-					world.setBlockState(pos, state.with(ON, true));
-					if (handStack.getItem() instanceof BlockItem blockItem) {
-						world.playSound(null, pos, blockItem.getBlock().getDefaultState().getSoundGroup().getPlaceSound(), SoundCategory.BLOCKS, 1.0f, 1.3f);
-					}
-					event = ModSoundEvents.STARTUP;
+				ActionResult result = blockEntity.addItem(world, player, handStack);
+				if (result != ActionResult.SUCCESS) {
+					return result;
 				}
+				world.setBlockState(pos, state.with(ON, true));
+				if (handStack.getItem() instanceof BlockItem blockItem) {
+					world.playSound(null, pos, blockItem.getBlock().getDefaultState().getSoundGroup().getPlaceSound(), SoundCategory.BLOCKS, 1.0f, 1.3f);
+				}
+				event = ModSoundEvents.STARTUP;
 			}
 			else if (handStack.isEmpty() && !printing) {
 				if (finished) {

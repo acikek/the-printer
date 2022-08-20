@@ -30,6 +30,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Rarity;
 import net.minecraft.util.collection.DefaultedList;
@@ -100,13 +101,21 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 				: enabledRules.get(0).getValue().enabled.orElse(gameruleEnabled);
 	}
 
-	public boolean addItem(World world, PlayerEntity player, ItemStack handStack) {
+	public ActionResult addItem(World world, PlayerEntity player, ItemStack handStack) {
 		rules = PrinterRule.getMatchingRules(handStack);
 		boolean enabled = isEnabled(world, handStack);
 		if (!enabled) {
-			return false;
+			return ActionResult.PASS;
 		}
-		requiredXP = Math.max(1, getRequiredXP(handStack));
+		try {
+			requiredXP = Math.max(1, getRequiredXP(handStack));
+		}
+		catch (Exception e) {
+			if (!world.isClient()) {
+				ThePrinter.LOGGER.error("Error while calculating XP for '" + handStack + "': ", e);
+			}
+			return ActionResult.CONSUME;
+		}
 		requiredTicks = requiredXP * 3;
 		int stackCount = Math.min(handStack.getCount(), getMaxStackCount(handStack));
 		ItemStack copy = handStack.copy();
@@ -115,7 +124,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		if (!player.isCreative()) {
 			handStack.decrement(stackCount);
 		}
-		return true;
+		return ActionResult.SUCCESS;
 	}
 
 	public void tryDropXP(ServerWorld world, BlockPos pos) {
@@ -199,7 +208,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 			return overrides.get(0).getValue().override.orElse(0);
 		}
 		int baseXP = getBaseXP(stack);
-		var modifiers = PrinterRule.filterByType(rules, PrinterRule.Type.OVERRIDE, null);
+		var modifiers = PrinterRule.filterByType(rules, PrinterRule.Type.MODIFIER, null);
 		if (!modifiers.isEmpty()) {
 			double result = baseXP;
 			List<Expression> expressions = modifiers.stream()
