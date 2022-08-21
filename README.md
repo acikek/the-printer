@@ -5,9 +5,9 @@ When the XP bar is full, the printing process begins! A translucent item will ap
 
 ### [spadeteam](https://discord.gg/QYymKz84tR)'s entry to ModFest: Singularity
 ---
-<center>
+<div align="center">
 <img src =https://media.discordapp.net/attachments/971623511544197130/1010714253579268117/unknown.png width="720" height="480"/>
-</center>
+</div>
 
 ---
 
