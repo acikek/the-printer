@@ -1,9 +1,11 @@
+# The Printer
+
 This mod adds a machine into the game that can print any item from XP. Place an item into an empty printer and **start sneaking** to deposit experience! **Jumping** while sneaking lets you deposit more XP at a time.
 
 When the XP bar is full, the printing process begins! A translucent item will appear above the machine and slowly become more opaque over time. You can take it out once it's completely solid!
 
+[![Created for ModFest: Singularity](https://blob.jortage.com/blobs/5/d4d/5d4d14d96db2e2024d87cf5606cb7ce6421633a002e328947f85d210ba250ecb9f86de8df210dd031be2d4eafb0980494e7a1e8e99590a550abaa42d82768b9f)](https://modfest.net)
 
-### [spadeteam](https://discord.gg/QYymKz84tR)'s entry to ModFest: Singularity
 ---
 <div align="center">
 <img src =https://media.discordapp.net/attachments/971623511544197130/1010714253579268117/unknown.png width="720" height="480"/>
