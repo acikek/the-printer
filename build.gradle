@@ -2,6 +2,8 @@ plugins {
 	id 'fabric-loom' version '0.12-SNAPSHOT'
 	id 'org.quiltmc.quilt-mappings-on-loom' version '4.2.0'
 	id 'maven-publish'
+	id 'com.github.johnrengelman.shadow' version '7.1.2'
+	id 'java'
 }
 
 sourceCompatibility = JavaVersion.VERSION_17
@@ -19,6 +21,10 @@ repositories {
 	mavenCentral()
 }
 
+configurations {
+	shade
+}
+
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
@@ -31,7 +37,9 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	// EvalEx
-	modImplementation include("com.udojava:EvalEx:${project.evalex_version}")
+	String evalEx = "com.udojava:EvalEx:${project.evalex_version}"
+	implementation evalEx
+	shade evalEx
 }
 
 processResources {
@@ -54,6 +62,16 @@ jar {
 	from("LICENSE") {
 		rename { "${it}_${project.archivesBaseName}"}
 	}
+}
+
+shadowJar {
+	configurations = [project.configurations.shade]
+	classifier "dev-shadow"
+}
+
+remapJar {
+	input.set shadowJar.archiveFile
+	dependsOn shadowJar
 }
 
 publishing {
