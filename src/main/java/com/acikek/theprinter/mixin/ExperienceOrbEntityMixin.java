@@ -84,7 +84,9 @@ public abstract class ExperienceOrbEntityMixin implements PrinterExperienceOrbEn
 
 	@Inject(method = "writeCustomDataToNbt", at = @At("HEAD"))
 	private void theprinter$writeNbt(NbtCompound nbt, CallbackInfo ci) {
-		nbt.putLong("PrinterTarget", theprinter$printerTarget.asLong());
+		if (theprinter$printerTarget != null) {
+			nbt.putLong("PrinterTarget", theprinter$printerTarget.asLong());
+		}
 		nbt.putBoolean("CanDeposit", theprinter$canDeposit);
 	}
 
