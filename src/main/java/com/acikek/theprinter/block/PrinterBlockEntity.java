@@ -134,6 +134,19 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		}
 	}
 
+	public void modifyPrintedStack(World world, ItemStack stack) {
+		if (stack.isOf(Items.PAPER)) {
+			String key = "message.theprinter.paper_" + (world.random.nextInt(PAPER_MESSAGE_COUNT) + 1);
+			stack.setCustomName(Text.translatable(key));
+		}
+		else if (stack.hasNbt()) {
+			NbtCompound nbt = BlockItem.getBlockEntityNbtFromStack(stack);
+			if (nbt != null && nbt.contains("Items")) {
+				nbt.remove("Items");
+			}
+		}
+	}
+
 	public void removePrintedItem(World world, BlockPos pos, BlockState state, PlayerEntity player) {
 		ItemStack stack = getStack(1);
 		if (player != null && !stack.isEmpty()) {
@@ -141,12 +154,8 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 				PrinterUsedCriterion.INSTANCE.trigger(serverPlayer, requiredXP, requiredTicks, stack, stack.getRarity());
 			}
 			if (!player.isCreative()) {
-				ItemStack copy = stack.copy();
-				if (copy.isOf(Items.PAPER)) {
-					String key = "message.theprinter.paper_" + (world.random.nextInt(PAPER_MESSAGE_COUNT) + 1);
-					copy.setCustomName(Text.translatable(key));
-				}
-				player.giveItemStack(copy);
+				modifyPrintedStack(world, stack);
+				player.giveItemStack(stack);
 			}
 			setStack(1, ItemStack.EMPTY);
 		}
@@ -351,6 +360,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		}
 		ItemStack stack = ImplementedInventory.super.removeStack(slot, count);
 		removePrintedItem(world, pos, getCachedState(), null);
+		modifyPrintedStack(world, stack);
 		return stack;
 	}
 
