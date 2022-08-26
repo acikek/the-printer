@@ -151,7 +151,6 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 				PrinterUsedCriterion.INSTANCE.trigger(serverPlayer, requiredXP, requiredTicks, stack, stack.getRarity());
 			}
 			if (!player.isCreative()) {
-				modifyPrintedStack(world, stack);
 				player.giveItemStack(stack);
 			}
 			setStack(1, ItemStack.EMPTY);
@@ -235,7 +234,9 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 
 	public void startPrinting(World world, BlockPos pos, BlockState state) {
 		world.setBlockState(pos, state.with(PrinterBlock.PRINTING, true));
-		setStack(1, getStack(0).copy());
+		ItemStack printingStack = getStack(0).copy();
+		modifyPrintingStack(world, printingStack);
+		setStack(1, printingStack);
 		// Add one to the tick offset since the sound will begin next tick
 		startOffset = getTickOffset(world) + 1;
 	}
@@ -308,7 +309,6 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		}
 		ItemStack stack = ImplementedInventory.super.removeStack(slot, count);
 		removePrintedItem(world, pos, getCachedState(), null);
-		modifyPrintedStack(world, stack);
 		return stack;
 	}
 
