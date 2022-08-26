@@ -118,10 +118,10 @@ public class PrinterBlockEntityRenderer implements BlockEntityRenderer<PrinterBl
 			entity.endOffset = -1;
 		}
 		// Render top printing stack
-		if ((state.get(PrinterBlock.PRINTING) || finished) && !entity.getStack(0).isEmpty()) {
+		if ((state.get(PrinterBlock.PRINTING) || finished) && !entity.getStack(1).isEmpty()) {
 			int lightAbove = getLight(entity.getWorld(), entity.getPos().up(), light);
 			float progress = finished ? 1.0f : ((float) entity.progress / entity.requiredTicks);
-			renderPrintingStack(entity.getStack(0), tickDelta, matrices, vertexConsumers, lightAbove, overlay, seed, progress, finished, entity.endOffset);
+			renderPrintingStack(entity.getStack(1), tickDelta, matrices, vertexConsumers, lightAbove, overlay, seed, progress, finished, entity.endOffset);
 		}
 		matrices.pop();
 	}

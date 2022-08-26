@@ -127,16 +127,20 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		}
 	}
 
-	public void modifyPrintedStack(World world, ItemStack stack) {
+	public static void tryRemoveItems(NbtCompound nbt) {
+		if (nbt != null && nbt.contains("Items")) {
+			nbt.remove("Items");
+		}
+	}
+
+	public static void modifyPrintingStack(World world, ItemStack stack) {
 		if (stack.isOf(Items.PAPER)) {
 			String key = "message.theprinter.paper_" + (world.random.nextInt(PAPER_MESSAGE_COUNT) + 1);
 			stack.setCustomName(Text.translatable(key));
 		}
 		else if (stack.hasNbt()) {
-			NbtCompound nbt = BlockItem.getBlockEntityNbtFromStack(stack);
-			if (nbt != null && nbt.contains("Items")) {
-				nbt.remove("Items");
-			}
+			tryRemoveItems(stack.getNbt());
+			tryRemoveItems(BlockItem.getBlockEntityNbtFromStack(stack));
 		}
 	}
 
