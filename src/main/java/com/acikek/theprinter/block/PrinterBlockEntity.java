@@ -8,7 +8,6 @@ import com.acikek.theprinter.sound.ModSoundEvents;
 import com.acikek.theprinter.util.ImplementedInventory;
 import com.acikek.theprinter.util.PrinterExperienceOrbEntity;
 import com.acikek.theprinter.world.PrinterEnabledGameRule;
-import com.udojava.evalex.Expression;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
@@ -20,7 +19,6 @@ import net.minecraft.inventory.SidedInventory;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.item.ToolItem;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.Packet;
 import net.minecraft.network.listener.ClientPlayPacketListener;
@@ -32,7 +30,6 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Rarity;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -42,15 +39,11 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class PrinterBlockEntity extends BlockEntity implements SidedInventory, ImplementedInventory {
 
-	public static final int BASE_ITEM_COST = 55;
-	public static final int BASE_BLOCK_COST = 91;
 	public static final int PRINTING_INTERVAL = 180;
 	public static final int PAPER_MESSAGE_COUNT = 6;
 
@@ -108,7 +101,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 			return ActionResult.PASS;
 		}
 		try {
-			requiredXP = Math.max(1, getRequiredXP(handStack));
+			requiredXP = Math.max(1, PrinterRule.getRequiredXP(rules, handStack));
 		}
 		catch (Exception e) {
 			if (!world.isClient()) {
@@ -184,55 +177,6 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 			return getItems();
 		}
 		return DefaultedList.copyOf(ItemStack.EMPTY, getStack(0));
-	}
-
-	public static int getRarityXPMultiplier(Rarity rarity) {
-		return switch (rarity) {
-			case COMMON -> 1;
-			case UNCOMMON -> 2;
-			case RARE -> 4;
-			case EPIC -> 6;
-		};
-	}
-
-	public static int getNbtXPCost(ItemStack stack) {
-		if (!stack.hasNbt()) {
-			return 0;
-		}
-		NbtCompound nbt = stack.getOrCreateNbt();
-		return nbt.getKeys().size() * 20;
-	}
-
-	public static int getBaseXP(ItemStack stack) {
-		int baseCost = stack.getItem() instanceof BlockItem ? BASE_BLOCK_COST : BASE_ITEM_COST;
-		int materialMultiplier = stack.getItem() instanceof ToolItem ? 3 : 1;
-		int rarityMultiplier = getRarityXPMultiplier(stack.getRarity());
-		int nbtCost = getNbtXPCost(stack);
-		return (baseCost * materialMultiplier * rarityMultiplier) + nbtCost;
-	}
-
-	public int getRequiredXP(ItemStack stack) {
-		var overrides = PrinterRule.filterByType(rules, PrinterRule.Type.OVERRIDE, stack);
-		if (!overrides.isEmpty()) {
-			return overrides.get(0).getValue().override.orElse(0);
-		}
-		int baseXP = getBaseXP(stack);
-		var modifiers = PrinterRule.filterByType(rules, PrinterRule.Type.MODIFIER, null);
-		if (!modifiers.isEmpty()) {
-			double result = baseXP;
-			List<Expression> expressions = modifiers.stream()
-					.map(rule -> rule.getValue().expression)
-					.filter(Objects::nonNull)
-					.toList();
-			for (Expression expression : expressions) {
-				result = expression
-						.with("value", BigDecimal.valueOf(result))
-						.with("size", BigDecimal.valueOf(stack.getCount()))
-						.eval().doubleValue();
-			}
-			return (int) result;
-		}
-		return baseXP;
 	}
 
 	public static boolean canDepositXP(PlayerEntity player) {

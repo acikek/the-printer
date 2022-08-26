@@ -3,7 +3,9 @@ package com.acikek.theprinter.data;
 import com.acikek.theprinter.ThePrinter;
 import com.google.gson.JsonObject;
 import com.udojava.evalex.Expression;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ToolItem;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -12,7 +14,9 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.recipe.Ingredient;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
+import net.minecraft.util.Rarity;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 public class PrinterRule {
@@ -32,6 +36,9 @@ public class PrinterRule {
 	}
 
 	public static Map<Identifier, PrinterRule> RULES = new HashMap<>();
+
+	public static final int BASE_ITEM_COST = 55;
+	public static final int BASE_BLOCK_COST = 91;
 
 	public Ingredient input;
 	public Optional<Integer> override;
@@ -91,6 +98,55 @@ public class PrinterRule {
 			ThePrinter.LOGGER.warn("Multiple " + type + " rules for object '" + sourceObject + "': " + joined);
 		}
 		return result;
+	}
+
+	public static int getRarityXPMultiplier(Rarity rarity) {
+		return switch (rarity) {
+			case COMMON -> 1;
+			case UNCOMMON -> 2;
+			case RARE -> 4;
+			case EPIC -> 6;
+		};
+	}
+
+	public static int getNbtXPCost(ItemStack stack) {
+		if (!stack.hasNbt()) {
+			return 0;
+		}
+		NbtCompound nbt = stack.getOrCreateNbt();
+		return nbt.getKeys().size() * 20;
+	}
+
+	public static int getBaseXP(ItemStack stack) {
+		int baseCost = stack.getItem() instanceof BlockItem ? BASE_BLOCK_COST : BASE_ITEM_COST;
+		int materialMultiplier = stack.getItem() instanceof ToolItem ? 3 : 1;
+		int rarityMultiplier = getRarityXPMultiplier(stack.getRarity());
+		int nbtCost = getNbtXPCost(stack);
+		return (baseCost * materialMultiplier * rarityMultiplier) + nbtCost;
+	}
+
+	public static int getRequiredXP(List<Map.Entry<Identifier, PrinterRule>> rules, ItemStack stack) {
+		var overrides = PrinterRule.filterByType(rules, PrinterRule.Type.OVERRIDE, stack);
+		if (!overrides.isEmpty()) {
+			return overrides.get(0).getValue().override.orElse(0);
+		}
+		int baseXP = getBaseXP(stack);
+		var modifiers = PrinterRule.filterByType(rules, PrinterRule.Type.MODIFIER, null);
+		if (!modifiers.isEmpty()) {
+			double result = baseXP;
+			List<Expression> expressions = modifiers.stream()
+					.map(rule -> rule.getValue().expression)
+					.filter(Objects::nonNull)
+					.toList();
+			for (Expression expression : expressions) {
+				result = expression
+						.with("value", BigDecimal.valueOf(result))
+						.with("size", BigDecimal.valueOf(stack.getCount()))
+						.eval().doubleValue();
+			}
+			return (int) result;
+		}
+		return baseXP;
 	}
 
 	public static List<Map.Entry<Identifier, PrinterRule>> readNbt(NbtCompound nbt) {
