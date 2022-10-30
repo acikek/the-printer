@@ -1,6 +1,7 @@
 {
   "block.theprinter.the_printer": "La Impresora",
   "gamerule.enablePrinter": "Permitir La Impresora",
+  "gamerule.requirePrinterXP": "Requerir poner XP de impresora",
   "advancements.theprinter.use_printer.title": "La Impresora",
   "advancements.theprinter.use_printer.description": "Duplica un ítem con La Impresora",
   "advancements.theprinter.print_paper.title": "Sobreingeniería",

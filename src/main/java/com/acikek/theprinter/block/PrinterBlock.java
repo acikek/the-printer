@@ -41,6 +41,9 @@ import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityProvider {
 
 	public static final BooleanProperty ON = BooleanProperty.of("on");
@@ -84,7 +87,7 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 			boolean on = state.get(ON);
 			boolean printing = state.get(PRINTING);
 			boolean finished = state.get(FINISHED);
-			SoundEvent event = null;
+			List<SoundEvent> events = new ArrayList<>();
 			ItemStack handStack = player.getStackInHand(hand);
 			if (!handStack.isEmpty() && !on) {
 				ActionResult result = blockEntity.addItem(world, player, handStack);
@@ -95,21 +98,24 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 				if (handStack.getItem() instanceof BlockItem blockItem) {
 					world.playSound(null, pos, blockItem.getBlock().getDefaultState().getSoundGroup().getPlaceSound(), SoundCategory.BLOCKS, 1.0f, 1.3f);
 				}
-				event = ModSoundEvents.STARTUP;
+				events.add(ModSoundEvents.STARTUP);
 			}
 			else if (handStack.isEmpty() && !printing) {
+				boolean remove = false;
 				if (finished) {
-					blockEntity.removePrintedItem(world, pos, state, player);
-					event = SoundEvents.ENTITY_ITEM_PICKUP;
+					remove = blockEntity.removePrintedItem(world, pos, state, player);
+					events.add(SoundEvents.ENTITY_ITEM_PICKUP);
 				}
-				else if (on) {
-					world.setBlockState(pos, state.with(ON, false));
+				if (remove || (on && !finished)) {
+					world.setBlockState(pos, world.getBlockState(pos).with(ON, false));
 					blockEntity.removeItem(world, pos, player);
-					event = ModSoundEvents.SHUTDOWN;
+					events.add(ModSoundEvents.SHUTDOWN);
 				}
 			}
-			if (event != null) {
+			for (SoundEvent event : events) {
 				world.playSound(null, pos, event, SoundCategory.BLOCKS, 1.0f, 1.0f);
+			}
+			if (!events.isEmpty()) {
 				return ActionResult.SUCCESS;
 			}
 		}

@@ -3,13 +3,11 @@ package com.acikek.theprinter.client;
 import com.acikek.theprinter.block.PrinterBlock;
 import com.acikek.theprinter.client.render.PrinterBlockEntityRenderer;
 import com.acikek.theprinter.data.PrinterRule;
-import com.acikek.theprinter.world.PrinterEnabledGameRule;
+import com.acikek.theprinter.world.ModGameRules;
 import com.acikek.theprinter.world.PrinterRuleReloader;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.client.MinecraftClient;
@@ -20,7 +18,9 @@ import net.minecraft.network.PacketByteBuf;
 public class ThePrinterClient implements ClientModInitializer {
 
 	public static int renderTicks;
+
 	public static boolean printerEnabled;
+	public static boolean xpRequired;
 
 	@Override
 	public void onInitializeClient() {
@@ -29,8 +29,11 @@ public class ThePrinterClient implements ClientModInitializer {
 		ClientTickEvents.START_WORLD_TICK.register(world -> tick());
 		ClientPlayNetworking.registerGlobalReceiver(PrinterRuleReloader.ID, ThePrinterClient::reloadRule);
 		ClientPlayNetworking.registerGlobalReceiver(
-				PrinterEnabledGameRule.GAMERULE_CHANGED,
-				(client, handler, buf, responseSender) -> printerEnabled = buf.readBoolean()
+				ModGameRules.GAMERULES_CHANGED,
+				(client, handler, buf, responseSender) -> {
+					printerEnabled = buf.readBoolean();
+					xpRequired = buf.readBoolean();
+				}
 		);
 	}
 

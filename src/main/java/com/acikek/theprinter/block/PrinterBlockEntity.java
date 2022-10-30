@@ -7,7 +7,7 @@ import com.acikek.theprinter.data.PrinterRule;
 import com.acikek.theprinter.sound.ModSoundEvents;
 import com.acikek.theprinter.util.ImplementedInventory;
 import com.acikek.theprinter.util.PrinterExperienceOrbEntity;
-import com.acikek.theprinter.world.PrinterEnabledGameRule;
+import com.acikek.theprinter.world.ModGameRules;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
@@ -88,10 +88,16 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		var enabledRules = PrinterRule.filterByType(rules, PrinterRule.Type.ENABLED, stack);
 		boolean gameruleEnabled = world.isClient()
 				? ThePrinterClient.printerEnabled
-				: world.getGameRules().getBoolean(PrinterEnabledGameRule.INSTANCE);
+				: world.getGameRules().getBoolean(ModGameRules.PRINTER_ENABLED);
 		return enabledRules.isEmpty()
 				? gameruleEnabled
 				: enabledRules.get(0).getValue().enabled.orElse(gameruleEnabled);
+	}
+
+	public boolean isXPRequired(World world) {
+		return world.isClient()
+				? ThePrinterClient.xpRequired
+				: world.getGameRules().getBoolean(ModGameRules.XP_REQUIRED);
 	}
 
 	public ActionResult addItem(World world, PlayerEntity player, ItemStack handStack) {
@@ -110,6 +116,9 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 			return ActionResult.CONSUME;
 		}
 		requiredTicks = requiredXP * 3;
+		if (!isXPRequired(world)) {
+			requiredXP = 0;
+		}
 		int stackCount = Math.min(handStack.getCount(), getMaxStackCount(handStack));
 		ItemStack copy = handStack.copy();
 		copy.setCount(stackCount);
@@ -144,7 +153,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		}
 	}
 
-	public void removePrintedItem(World world, BlockPos pos, BlockState state, PlayerEntity player) {
+	public boolean removePrintedItem(World world, BlockPos pos, BlockState state, PlayerEntity player) {
 		ItemStack stack = getStack(1);
 		if (player != null && !stack.isEmpty()) {
 			if (player instanceof ServerPlayerEntity serverPlayer) {
@@ -158,12 +167,17 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		if (getStack(1).isEmpty()) {
 			world.setBlockState(pos, state.with(PrinterBlock.FINISHED, false));
 			xp = 0;
+			if (!isXPRequired(world)) {
+				removeItem(world, pos, player);
+				return true;
+			}
 		}
+		return false;
 	}
 
 	public void removeItem(World world, BlockPos pos, PlayerEntity player) {
 		ItemStack removed = removeStack(0);
-		if (!player.isCreative()) {
+		if (player != null && !player.isCreative()) {
 			player.giveItemStack(removed);
 		}
 		if (world instanceof ServerWorld serverWorld) {
