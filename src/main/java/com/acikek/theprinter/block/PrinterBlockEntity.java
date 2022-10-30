@@ -167,7 +167,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		if (getStack(1).isEmpty()) {
 			world.setBlockState(pos, state.with(PrinterBlock.FINISHED, false));
 			xp = 0;
-			if (!isXPRequired(world)) {
+			if (player != null && !isXPRequired(world)) {
 				removeItem(world, pos, player);
 				return true;
 			}
@@ -177,7 +177,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 
 	public void removeItem(World world, BlockPos pos, PlayerEntity player) {
 		ItemStack removed = removeStack(0);
-		if (player != null && !player.isCreative()) {
+		if (!player.isCreative()) {
 			player.giveItemStack(removed);
 		}
 		if (world instanceof ServerWorld serverWorld) {
