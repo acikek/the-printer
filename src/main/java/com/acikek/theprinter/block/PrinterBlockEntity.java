@@ -23,6 +23,8 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.Packet;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -35,7 +37,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
@@ -359,13 +360,13 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 	}
 
 	@Override
-	public NbtCompound toInitialChunkDataNbt() {
+	public NbtCompound toSyncedNbt() {
 		return toNbt();
 	}
 
 	public static void register() {
 		BLOCK_ENTITY_TYPE = Registry.register(
-				Registry.BLOCK_ENTITY_TYPE,
+				Registries.BLOCK_ENTITY_TYPE,
 				ThePrinter.id("printer_block_entity"),
 				FabricBlockEntityTypeBuilder.create(PrinterBlockEntity::new, PrinterBlock.INSTANCE).build()
 		);

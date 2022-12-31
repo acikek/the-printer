@@ -16,5 +16,6 @@
   "message.theprinter.paper_3": "We print... for Science!",
   "message.theprinter.paper_4": "Worrying: Cutting-edge printer can print itself",
   "message.theprinter.paper_5": "This machine costs less than its ink...",
-  "message.theprinter.paper_6": "Printers will replace you!"
+  "message.theprinter.paper_6": "Printers will replace you!",
+  "pack.theprinter.default": "Default Printer Rules"
 }

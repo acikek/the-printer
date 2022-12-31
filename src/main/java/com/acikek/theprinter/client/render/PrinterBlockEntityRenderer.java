@@ -5,25 +5,31 @@ import com.acikek.theprinter.block.PrinterBlock;
 import com.acikek.theprinter.block.PrinterBlockEntity;
 import com.acikek.theprinter.client.ThePrinterClient;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
+import net.minecraft.client.render.block.entity.BlockEntityRendererFactories;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
 import net.minecraft.client.render.item.ItemRenderer;
 import net.minecraft.client.render.model.json.ModelTransformation;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.Axis;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 public class PrinterBlockEntityRenderer implements BlockEntityRenderer<PrinterBlockEntity> {
 
-	public static final Identifier PROGRESS_BAR = ThePrinter.id("textures/block/progress_bar.png");
+	public static final Identifier PROGRESS_BAR = ThePrinter.id("textures/progress_bar.png");
 
 	public ItemRenderer itemRenderer;
 
@@ -36,19 +42,19 @@ public class PrinterBlockEntityRenderer implements BlockEntityRenderer<PrinterBl
 	}
 
 	public void positionOverlay(MatrixStack matrices, Direction facing) {
-		Vec3f vec = facing.getUnitVector();
-		matrices.translate(vec.getX() / 2.0f + 0.5f, vec.getY() / 2.0f + 0.5f, vec.getZ() / 2.0f + 0.5f);
+		Vector3f vec = facing.getUnitVector();
+		matrices.translate(vec.x / 2.0f + 0.5f, vec.y / 2.0f + 0.5f, vec.z / 2.0f + 0.5f);
 		matrices.multiply(facing.getRotationQuaternion());
-		matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-90));
+		matrices.multiply(Axis.X_POSITIVE.rotationDegrees(-90));
 		matrices.translate(0, 0, 0.005);
 	}
 
 	public void renderProgressBar(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int lightFront, float progress) {
 		matrices.push();
 		matrices.translate(0.5, -1.25, 0.0);
-		matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180));
+		matrices.multiply(Axis.Y_POSITIVE.rotationDegrees(180));
 		VertexConsumer buffer = vertexConsumers.getBuffer(RenderLayer.getEntityCutout(PROGRESS_BAR));
-		Matrix4f matrix = matrices.peek().getPosition();
+		Matrix4f matrix = matrices.peek().getModel();
 		Matrix3f normal = matrices.peek().getNormal();
 		float progressX = 0.8125f - 0.6250f * progress;
 		buffer.vertex(matrix, progressX, 0.875f, 0).color(0xFF_FFFFFF).uv(0, 0).overlay(OverlayTexture.DEFAULT_UV).light(lightFront).normal(normal, 0, 0, 1).next();
@@ -62,7 +68,7 @@ public class PrinterBlockEntityRenderer implements BlockEntityRenderer<PrinterBl
 		matrices.push();
 		matrices.translate(0.0, -0.06, 0.0);
 		matrices.scale(0.4f, 0.4f, 1);
-		matrices.multiplyMatrix(Matrix4f.scale(1, 1, 0.01f));
+		matrices.multiplyMatrix(new Matrix4f().scale(1, 1, 0.01f));
 		itemRenderer.renderItem(stack, ModelTransformation.Mode.GUI, lightFront, overlay, matrices, vertexConsumers, seed);
 		matrices.pop();
 	}
@@ -80,7 +86,7 @@ public class PrinterBlockEntityRenderer implements BlockEntityRenderer<PrinterBl
 		if (finished) {
 			matrices.translate(0.0, MathHelper.sin(getAngle(tickDelta, offset)) * 0.1f, 0.0);
 		}
-		matrices.multiply(Vec3f.POSITIVE_Y.getRadialQuaternion(getAngle(tickDelta, 0)));
+		matrices.multiply(Axis.Y_POSITIVE.rotation(getAngle(tickDelta, 0)));
 		matrices.scale(1.3f, 1.3f, 1.3f);
 		VertexConsumerProvider vcp = !finished && vertexConsumers instanceof VertexConsumerProvider.Immediate immediate
 				? new TranslucentVertexConsumerProvider(immediate, progress)
@@ -132,6 +138,6 @@ public class PrinterBlockEntityRenderer implements BlockEntityRenderer<PrinterBl
 	}
 
 	public static void register() {
-		BlockEntityRendererRegistry.register(PrinterBlockEntity.BLOCK_ENTITY_TYPE, PrinterBlockEntityRenderer::new);
+		BlockEntityRendererFactories.register(PrinterBlockEntity.BLOCK_ENTITY_TYPE, PrinterBlockEntityRenderer::new);
 	}
 }

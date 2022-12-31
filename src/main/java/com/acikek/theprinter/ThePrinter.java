@@ -10,6 +10,7 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,8 @@ public class ThePrinter implements ModInitializer {
 	public static void registerDatapack() {
 		FabricLoader.getInstance().getModContainer(ID).ifPresent(mod ->
 				ResourceManagerHelper.registerBuiltinResourcePack(
-						ThePrinter.id("default"), mod, "Default Printer Rules",
+						ThePrinter.id("default"), mod,
+						Text.translatable("pack.theprinter.default"),
 						ResourcePackActivationType.DEFAULT_ENABLED
 				)
 		);

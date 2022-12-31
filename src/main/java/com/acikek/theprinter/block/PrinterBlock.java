@@ -2,25 +2,19 @@ package com.acikek.theprinter.block;
 
 import com.acikek.theprinter.ThePrinter;
 import com.acikek.theprinter.sound.ModSoundEvents;
-import net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory;
-import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemPlacementContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.item.*;
 import net.minecraft.network.packet.s2c.play.StopSoundS2CPacket;
-import net.minecraft.server.MinecraftServer;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.BlockSoundGroup;
@@ -33,11 +27,9 @@ import net.minecraft.util.*;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.BlockView;
-import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
@@ -169,9 +161,11 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 
 	public static void register() {
 		Identifier id = ThePrinter.id("the_printer");
-		Registry.register(Registry.BLOCK, id, INSTANCE);
-		Registry.register(Registry.ITEM, id, new BlockItem(INSTANCE, new FabricItemSettings()
-				.group(ItemGroup.DECORATIONS)
-				.rarity(Rarity.RARE)));
+		Registry.register(Registries.BLOCK, id, INSTANCE);
+		BlockItem blockItem = new BlockItem(INSTANCE, new FabricItemSettings().rarity(Rarity.RARE));
+		Registry.register(Registries.ITEM, id, blockItem);
+		ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(entries -> {
+			entries.addAfter(Blocks.ENCHANTING_TABLE, blockItem);
+		});
 	}
 }

@@ -1,9 +1,10 @@
 package com.acikek.theprinter.sound;
 
 import com.acikek.theprinter.ThePrinter;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
 
 public class ModSoundEvents {
 
@@ -13,7 +14,7 @@ public class ModSoundEvents {
 
 	public static SoundEvent register(String path) {
 		Identifier id = ThePrinter.id(path);
-		return Registry.register(Registry.SOUND_EVENT, id, new SoundEvent(id));
+		return Registry.register(Registries.SOUND_EVENT, id, SoundEvent.createVariableRangeEvent(id));
 	}
 
 	public static void register() {
