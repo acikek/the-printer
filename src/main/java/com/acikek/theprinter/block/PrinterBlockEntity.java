@@ -1,7 +1,7 @@
 package com.acikek.theprinter.block;
 
 import com.acikek.theprinter.ThePrinter;
-import com.acikek.theprinter.advancement.PrinterUsedCriterion;
+import com.acikek.theprinter.advancement.ModCriteria;
 import com.acikek.theprinter.client.ThePrinterClient;
 import com.acikek.theprinter.data.PrinterRule;
 import com.acikek.theprinter.sound.ModSoundEvents;
@@ -158,7 +158,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		ItemStack stack = getStack(1);
 		if (player != null && !stack.isEmpty()) {
 			if (player instanceof ServerPlayerEntity serverPlayer) {
-				PrinterUsedCriterion.INSTANCE.trigger(serverPlayer, requiredXP, requiredTicks, stack, stack.getRarity());
+				ModCriteria.triggerPrinterUsed(serverPlayer, requiredXP, requiredTicks, stack, stack.getRarity());
 			}
 			if (!player.isCreative()) {
 				player.giveItemStack(stack);

@@ -19,6 +19,14 @@ loom {
 
 repositories {
 	mavenCentral()
+
+	maven {
+		name = "Modrinth"
+		url = "https://api.modrinth.com/maven"
+		content {
+			includeGroup "maven.modrinth"
+		}
+	}
 }
 
 configurations {
@@ -38,6 +46,9 @@ dependencies {
 	String evalEx = "com.udojava:EvalEx:${project.evalex_version}"
 	implementation evalEx
 	shade evalEx
+
+	// Data Criteria
+	modImplementation include("maven.modrinth:data-criteria:${project.datacriteria_version}")
 }
 
 processResources {

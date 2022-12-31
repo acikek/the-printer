@@ -1,6 +1,6 @@
 package com.acikek.theprinter;
 
-import com.acikek.theprinter.advancement.PrinterUsedCriterion;
+import com.acikek.theprinter.advancement.ModCriteria;
 import com.acikek.theprinter.block.PrinterBlock;
 import com.acikek.theprinter.block.PrinterBlockEntity;
 import com.acikek.theprinter.sound.ModSoundEvents;
@@ -30,7 +30,7 @@ public class ThePrinter implements ModInitializer {
 		LOGGER.info("The Printer - Have your XP ready!");
 		PrinterBlock.register();
 		PrinterBlockEntity.register();
-		PrinterUsedCriterion.register();
+		ModCriteria.register();
 		ModSoundEvents.register();
 		ModGameRules.register();
 		PrinterRuleReloader.register();
