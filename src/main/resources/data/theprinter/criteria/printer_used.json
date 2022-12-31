@@ -1,0 +1,21 @@
+{
+  "optional": true,
+  "parameters": [
+    {
+      "name": "xp",
+      "type": "datacriteria:int"
+    },
+    {
+      "name": "time",
+      "type": "datacriteria:int"
+    },
+    {
+      "name": "item",
+      "type": "minecraft:item"
+    },
+    {
+      "name": "rarity",
+      "type": "theprinter:rarity"
+    }
+  ]
+}
