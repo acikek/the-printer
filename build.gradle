@@ -27,6 +27,11 @@ repositories {
 			includeGroup "maven.modrinth"
 		}
 	}
+
+	maven {
+		name = "TerraformersMC"
+		url = "https://maven.terraformersmc.com/"
+	}
 }
 
 configurations {
@@ -49,6 +54,9 @@ dependencies {
 
 	// Data Criteria
 	modImplementation include("maven.modrinth:data-criteria:${project.datacriteria_version}")
+
+	// EMI
+	modImplementation "dev.emi:emi:${project.emi_version}"
 }
 
 processResources {
