@@ -10,7 +10,7 @@ import net.minecraft.util.Rarity;
 public class ModCriteria {
 
 	public static void triggerPrinterUsed(ServerPlayerEntity player, int xp, int time, ItemStack stack, Rarity rarity) {
-		DataCriteriaAPI.trigger(ThePrinter.id("printer_used"), true, player, xp, time, stack, rarity);
+		DataCriteriaAPI.trigger(ThePrinter.id("printer_used"), player, xp, time, stack, rarity);
 	}
 
 	public static void register() {
