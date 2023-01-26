@@ -1,0 +1,5 @@
+{
+  "exclusions": [
+    "default_printer_rules:precious_ores"
+  ]
+}

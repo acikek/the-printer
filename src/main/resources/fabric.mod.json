@@ -25,6 +25,9 @@
     ],
     "client": [
       "com.acikek.theprinter.client.ThePrinterClient"
+    ],
+    "emi": [
+      "com.acikek.theprinter.compat.emi.ThePrinterEmiPlugin"
     ]
   },
   "mixins": [

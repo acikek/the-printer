@@ -7,5 +7,6 @@
       "item": "minecraft:raw_copper"
     }
   ],
-  "size": 8
+  "size": 8,
+  "enabled": true
 }

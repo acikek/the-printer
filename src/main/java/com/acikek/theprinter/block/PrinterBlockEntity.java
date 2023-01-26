@@ -55,7 +55,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 	/**
 	 * The printer's inventory.
 	 * <p>
-	 * The first stack will show up on the screen. It should be an exact copy of the input stack..<br>
+	 * The first stack will show up on the screen. It should be an exact copy of the input stack.<br>
 	 * The second stack will render above the machine as it is printing the item. It is allowed to differ from the original stack.
 	 * </p>
 	 */
