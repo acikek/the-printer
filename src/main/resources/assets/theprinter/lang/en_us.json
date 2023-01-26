@@ -20,5 +20,7 @@
   "pack.theprinter.default": "Default Printer Rules",
   "tag.default_printer_rules.precious_ores": "Precious Ores",
   "emi.category.theprinter.the_printer": "Printing",
-  "emi.tooltip.theprinter.max_size": "Max Size: %d"
+  "emi.tooltip.theprinter.max_size": "Max Size: %d",
+  "config.waila.plugin_theprinter": "The Printer",
+  "config.waila.plugin_theprinter.printer_info": "Show Printer Info"
 }
