@@ -143,6 +143,25 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 		}
 	}
 
+	@Override
+	public boolean hasComparatorOutput(BlockState state) {
+		return state.get(ON);
+	}
+
+	@Override
+	public int getComparatorOutput(BlockState state, World world, BlockPos pos) {
+		if (state.get(PRINTING)) {
+			return 14;
+		}
+		if (state.get(FINISHED)) {
+			return 15;
+		}
+		if (world.getBlockEntity(pos) instanceof PrinterBlockEntity blockEntity) {
+			return (int) (((float) blockEntity.xp / blockEntity.requiredXP) * 14);
+		}
+		return 0;
+	}
+
 	@Nullable
 	@Override
 	public BlockState getPlacementState(ItemPlacementContext ctx) {

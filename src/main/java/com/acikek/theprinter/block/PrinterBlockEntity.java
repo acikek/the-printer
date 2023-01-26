@@ -219,6 +219,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		}
 		if (world instanceof ServerWorld serverWorld) {
 			serverWorld.getChunkManager().markForUpdate(pos);
+			serverWorld.updateNeighbors(pos, PrinterBlock.INSTANCE);
 		}
 	}
 
