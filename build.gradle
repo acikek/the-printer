@@ -27,6 +27,15 @@ repositories {
 			includeGroup "maven.modrinth"
 		}
 	}
+
+	maven {
+		name = "TerraformersMC"
+		url = "https://maven.terraformersmc.com/"
+	}
+
+	maven {
+		url = "https://maven.bai.lol"
+	}
 }
 
 configurations {
@@ -49,6 +58,16 @@ dependencies {
 
 	// Data Criteria
 	modImplementation include("maven.modrinth:data-criteria:${project.datacriteria_version}")
+
+	// EMI
+	modImplementation "dev.emi:emi:${project.emi_version}"
+
+	// WTHIT API
+	modCompileOnly "mcp.mobius.waila:wthit-api:fabric-${project.wthit_version}"
+
+	// WTHIT Runtime
+	modRuntimeOnly "mcp.mobius.waila:wthit:fabric-${project.wthit_version}"
+	modRuntimeOnly "lol.bai:badpackets:fabric-0.2.0"
 }
 
 processResources {

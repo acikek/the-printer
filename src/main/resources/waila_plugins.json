@@ -1,0 +1,6 @@
+{
+  "theprinter:plugin": {
+    "initializer": "com.acikek.theprinter.compat.wthit.ThePrinterWailaPlugin",
+    "side": "*"
+  }
+}

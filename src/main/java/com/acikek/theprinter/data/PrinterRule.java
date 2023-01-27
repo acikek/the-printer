@@ -208,4 +208,21 @@ public class PrinterRule {
 		buf.writeOptional(size, PacketByteBuf::writeInt);
 		buf.writeOptional(enabled, PacketByteBuf::writeBoolean);
 	}
+
+	@Override
+	public String toString() {
+		List<String> values = new ArrayList<>();
+		for (Type type : types) {
+			values.add(switch (type) {
+				case OVERRIDE -> "override=" + override.orElse(null);
+				case MODIFIER -> "modifier=" + modifier.orElse(null);
+				case SIZE -> "size=" + size.orElse(null);
+				case ENABLED -> "enabled=" + enabled.orElse(null);
+			});
+		}
+		return "PrinterRule["
+				+ "for " + input.toJson() + "; "
+				+ String.join(", ", values)
+				+ "]";
+	}
 }
