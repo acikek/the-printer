@@ -163,8 +163,8 @@ public class ThePrinterEmiRecipe implements EmiRecipe {
 
 		public Supplier<TooltipComponent> tooltipSupplier;
 
-		public TooltipButtonWidget(int x, int y, int width, int height, int u, int v, BooleanSupplier isActive, ClickAction action, Supplier<TooltipComponent> tooltipSupplier) {
-			super(x, y, width, height, u, v, isActive, action);
+		public TooltipButtonWidget(int x, int y, int width, int height, int u, int v, Identifier texture, BooleanSupplier isActive, ClickAction action, Supplier<TooltipComponent> tooltipSupplier) {
+			super(x, y, width, height, u, v, texture, isActive, action);
 			this.tooltipSupplier = tooltipSupplier;
 		}
 
@@ -185,7 +185,7 @@ public class ThePrinterEmiRecipe implements EmiRecipe {
 	}
 
 	public void addStackSizeButtons(WidgetHolder widgets) {
-		widgets.addButton(1, 22, 12, 12, 0, 64, () -> stackSize > 1, (mouseX, mouseY, button) -> {
+		widgets.addButton(5, 25, 9, 9, 238, 0, ThePrinterEmiPlugin.SPRITES, () -> stackSize > 1, (mouseX, mouseY, button) -> {
 			if (stackSize > 1) {
 				stackSize -= 1;
 				update();
@@ -193,7 +193,7 @@ public class ThePrinterEmiRecipe implements EmiRecipe {
 		});
 		Supplier<TooltipComponent> maxStackSizeTooltip = () ->
 				TooltipComponent.of(Text.translatable("emi.tooltip.theprinter.max_size", maxStackSize).asOrderedText());
-		var increaseButton = new TooltipButtonWidget(19, 22, 12, 12, 12, 64, () -> stackSize < maxStackSize, (mouseX, mouseY, button) -> {
+		var increaseButton = new TooltipButtonWidget(18, 25, 9, 9, 247, 0, ThePrinterEmiPlugin.SPRITES, () -> stackSize < maxStackSize, (mouseX, mouseY, button) -> {
 			if (stackSize < maxStackSize) {
 				stackSize += 1;
 				update();
