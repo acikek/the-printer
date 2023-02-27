@@ -62,7 +62,7 @@ public abstract class ExperienceOrbEntityMixin implements PrinterExperienceOrbEn
 		}
 		Vec3d difference = Vec3d.ofCenter(theprinter$printerTarget).subtract(entity.getPos());
 		if (difference.length() < 1.2 && entity.world.getBlockEntity(theprinter$printerTarget) instanceof PrinterBlockEntity blockEntity) {
-			blockEntity.depositXP(entity.world, theprinter$printerTarget, blockEntity.adjustAmount(getExperienceAmount()), 0.0f);
+			blockEntity.depositXP(entity.world, theprinter$printerTarget, blockEntity.capXPDepositAmount(getExperienceAmount()), 0.0f);
 			entity.discard();
 			return;
 		}

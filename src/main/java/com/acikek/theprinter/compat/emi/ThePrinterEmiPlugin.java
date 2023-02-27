@@ -20,14 +20,6 @@ public class ThePrinterEmiPlugin implements EmiPlugin {
 	public static final EmiStack WORKSTATION = EmiStack.of(PrinterBlock.INSTANCE);
 	public static final EmiRecipeCategory CATEGORY = new EmiRecipeCategory(ThePrinter.id("the_printer"), WORKSTATION);
 
-	// 1. find all rules to work with
-		// never use disabled rules
-		// if enablePrinter is false, find stacks that are enabled, and gather all the rules that apply to them
-		// if enablePrinter is true, use all rules except 'enabled' rules
-	// 2. collect all stacks from the printer rules as a set
-	// 3. map each stack to a list of printer rules
-	// 4. reverse this map and map each list of printer rules to a list of stacks, coalescing the previous stack keys if they have shared lists
-
 	public static List<EmiStack> getMatchingStacks(Ingredient ingredient) {
 		return Arrays.stream(ingredient.getMatchingStacks())
 				.map(EmiStack::of)

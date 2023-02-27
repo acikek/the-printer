@@ -132,7 +132,7 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 	@Override
 	public void onStateReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean moved) {
 		if (state.getBlock() != newState.getBlock() && world.getBlockEntity(pos) instanceof PrinterBlockEntity blockEntity) {
-			ItemScatterer.spawn(world, pos, blockEntity.getActualInventory(state));
+			ItemScatterer.spawn(world, pos, blockEntity.getMaterialInventory(state));
 			if (world instanceof ServerWorld serverWorld) {
 				blockEntity.tryDropXP(serverWorld, pos);
 				if (state.get(PRINTING)) {

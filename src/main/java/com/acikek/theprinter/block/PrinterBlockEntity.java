@@ -1,9 +1,9 @@
 package com.acikek.theprinter.block;
 
+import com.acikek.datacriteria.api.DataCriteriaAPI;
 import com.acikek.theprinter.ThePrinter;
-import com.acikek.theprinter.advancement.ModCriteria;
-import com.acikek.theprinter.client.ThePrinterClient;
 import com.acikek.theprinter.data.PrinterRule;
+import com.acikek.theprinter.data.PrinterRules;
 import com.acikek.theprinter.sound.ModSoundEvents;
 import com.acikek.theprinter.util.ImplementedInventory;
 import com.acikek.theprinter.util.PrinterExperienceOrbEntity;
@@ -12,6 +12,7 @@ import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityT
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventories;
@@ -29,7 +30,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.Rarity;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -40,7 +41,6 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Map;
 
 public class PrinterBlockEntity extends BlockEntity implements SidedInventory, ImplementedInventory {
 
@@ -61,7 +61,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 	 */
 	public DefaultedList<ItemStack> items = DefaultedList.ofSize(2, ItemStack.EMPTY);
 
-	public List<Map.Entry<Identifier, PrinterRule>> rules;
+	public PrinterRules rules;
 	public int xp = 0;
 	public int requiredXP = -1;
 	public int progress = 0;
@@ -69,6 +69,9 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 	public int startOffset = 0;
 	public int endOffset = -1;
 
+	/**
+	 * Initializes {@link PrinterBlockEntity#playerDepositArea} and {@link PrinterBlockEntity#orbDepositArea} based on the printer block's position.
+	 */
 	public PrinterBlockEntity(BlockPos blockPos, BlockState blockState) {
 		super(BLOCK_ENTITY_TYPE, blockPos, blockState);
 		Vec3d center = Vec3d.ofCenter(blockPos);
@@ -76,38 +79,25 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		orbDepositArea = Box.of(center, 6.0, 3.5, 6.0);
 	}
 
-	public int getMaxStackCount(ItemStack stack) {
-		var sizeRules = PrinterRule.filterByType(rules, PrinterRule.Type.SIZE, stack);
-		if (!sizeRules.isEmpty()) {
-			return sizeRules.get(0).getValue().size.orElse(1);
-		}
-		return 1;
+	public static void triggerPrinterUsed(ServerPlayerEntity player, int xp, int time, ItemStack stack, Rarity rarity) {
+		DataCriteriaAPI.trigger(ThePrinter.id("printer_used"), player, xp, time, stack, rarity);
 	}
 
-	public boolean isEnabled(World world, ItemStack stack) {
-		var enabledRules = PrinterRule.filterByType(rules, PrinterRule.Type.ENABLED, stack);
-		boolean gameruleEnabled = world.isClient()
-				? ThePrinterClient.printerEnabled
-				: world.getGameRules().getBoolean(ModGameRules.PRINTER_ENABLED);
-		return enabledRules.isEmpty()
-				? gameruleEnabled
-				: enabledRules.get(0).getValue().enabled.orElse(gameruleEnabled);
-	}
-
-	public boolean isXPRequired(World world) {
-		return world.isClient()
-				? ThePrinterClient.xpRequired
-				: world.getGameRules().getBoolean(ModGameRules.XP_REQUIRED);
-	}
-
+	/**
+	 * Attempts to insert a stack into the printing slot.
+	 * <p>
+	 * Fails if the stack cannot be inserted (determined by {@link PrinterRules#canBeInserted(World, ItemStack)})
+	 * or if the required XP calculation ({@link PrinterRules#getRequiredXP(ItemStack)}) errors.
+	 * </p>
+	 */
 	public ActionResult addItem(World world, PlayerEntity player, ItemStack handStack) {
 		rules = PrinterRule.getMatchingRules(handStack);
-		boolean enabled = isEnabled(world, handStack);
+		boolean enabled = rules.canBeInserted(world, handStack);
 		if (!enabled) {
 			return ActionResult.PASS;
 		}
 		try {
-			requiredXP = Math.max(1, PrinterRule.getRequiredXP(rules, handStack));
+			requiredXP = Math.max(1, rules.getRequiredXP(handStack));
 		}
 		catch (Exception e) {
 			if (!world.isClient()) {
@@ -116,10 +106,10 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 			return ActionResult.CONSUME;
 		}
 		requiredTicks = requiredXP * 3;
-		if (!isXPRequired(world)) {
+		if (!ModGameRules.isXPRequired(world)) {
 			requiredXP = 0;
 		}
-		int stackCount = Math.min(handStack.getCount(), getMaxStackCount(handStack));
+		int stackCount = Math.min(handStack.getCount(), rules.getMaxInsertCount(handStack));
 		ItemStack copy = handStack.copy();
 		copy.setCount(stackCount);
 		setStack(0, copy);
@@ -129,6 +119,9 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		return ActionResult.SUCCESS;
 	}
 
+	/**
+	 * If any XP is stored in the {@link PrinterBlockEntity#xp} value, drops it at the printer's position.
+	 */
 	public void tryDropXP(ServerWorld world, BlockPos pos) {
 		if (xp > 0) {
 			Vec3d xpPos = Vec3d.ofCenter(pos).add(0.0, 0.4, 0.0);
@@ -136,28 +129,38 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		}
 	}
 
-	public static void tryRemoveItems(NbtCompound nbt) {
+	/**
+	 * Attempts to sanitize an NBT compound to remove any internally held items.
+	 */
+	public static void tryRemoveContainedItems(NbtCompound nbt) {
 		if (nbt != null && nbt.contains("Items")) {
 			nbt.remove("Items");
 		}
 	}
 
+	/**
+	 * Modifiea a stack's NBT in-place to prepare it for the printing output.
+	 */
 	public static void modifyPrintingStack(World world, ItemStack stack) {
 		if (stack.isOf(Items.PAPER)) {
 			String key = "message.theprinter.paper_" + (world.random.nextInt(PAPER_MESSAGE_COUNT) + 1);
 			stack.setCustomName(Text.translatable(key));
 		}
 		else if (stack.hasNbt()) {
-			tryRemoveItems(stack.getNbt());
-			tryRemoveItems(BlockItem.getBlockEntityNbtFromStack(stack));
+			tryRemoveContainedItems(stack.getNbt());
+			tryRemoveContainedItems(BlockItem.getBlockEntityNbtFromStack(stack));
 		}
 	}
 
+	/**
+	 * @param player if {@code null}, can be used as a callback for non-player interactions
+	 * @return whether the printed stack has been fully removed
+	 */
 	public boolean removePrintedItem(World world, BlockPos pos, BlockState state, PlayerEntity player) {
 		ItemStack stack = getStack(1);
 		if (player != null && !stack.isEmpty()) {
 			if (player instanceof ServerPlayerEntity serverPlayer) {
-				ModCriteria.triggerPrinterUsed(serverPlayer, requiredXP, requiredTicks, stack, stack.getRarity());
+				triggerPrinterUsed(serverPlayer, requiredXP, requiredTicks, stack, stack.getRarity());
 			}
 			if (!player.isCreative()) {
 				player.giveItemStack(stack);
@@ -167,7 +170,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		if (getStack(1).isEmpty()) {
 			world.setBlockState(pos, state.with(PrinterBlock.FINISHED, false));
 			xp = 0;
-			if (player != null && !isXPRequired(world)) {
+			if (player != null && !ModGameRules.isXPRequired(world)) {
 				removeItem(world, pos, player);
 				return true;
 			}
@@ -175,6 +178,9 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		return false;
 	}
 
+	/**
+	 * Removes the item being printed and resets all values corresponding to it.
+	 */
 	public void removeItem(World world, BlockPos pos, PlayerEntity player) {
 		ItemStack removed = removeStack(0);
 		if (!player.isCreative()) {
@@ -189,23 +195,33 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		xp = 0;
 	}
 
-	public DefaultedList<ItemStack> getActualInventory(BlockState state) {
+	/**
+	 * @return only the inventory of the first stack and not the façade stack used for the printing display
+	 */
+	public DefaultedList<ItemStack> getMaterialInventory(BlockState state) {
 		if (getStack(1).isEmpty() || state.get(PrinterBlock.FINISHED)) {
 			return getItems();
 		}
 		return DefaultedList.copyOf(ItemStack.EMPTY, getStack(0));
 	}
 
-	public static boolean canDepositXP(PlayerEntity player) {
-		return player.isSneaking() && (player.experienceLevel != 0 || player.experienceProgress > 0.0f);
+	/**
+	 * @param entity the entity trying to deposit XP. If this entity is a {@link PlayerEntity}, checks if they are
+	 *               sneaking and that they have sufficient experience. If this entity is a {@link ExperienceOrbEntity},
+	 *               checks that its {@link PrinterExperienceOrbEntity} has a printer target and it is able to deposit.
+	 */
+	public static boolean canDepositXP(Entity entity) {
+		if (entity instanceof PlayerEntity player) {
+			return player.isSneaking() && (player.experienceLevel != 0 || player.experienceProgress > 0.0f);
+		}
+		else if (entity instanceof ExperienceOrbEntity orb) {
+			PrinterExperienceOrbEntity printerOrb = (PrinterExperienceOrbEntity) orb;
+			return printerOrb.canDeposit() && printerOrb.getPrinterTarget() == null;
+		}
+		return false;
 	}
 
-	public static boolean canDepositXP(ExperienceOrbEntity orb) {
-		PrinterExperienceOrbEntity printerOrb = (PrinterExperienceOrbEntity) orb;
-		return printerOrb.canDeposit() && printerOrb.getPrinterTarget() == null;
-	}
-
-	public int adjustAmount(int amount) {
+	public int capXPDepositAmount(int amount) {
 		if (xp + amount >= requiredXP) {
 			return requiredXP - xp;
 		}
@@ -224,18 +240,22 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 	}
 
 	/**
-	 * Searches for players within the {@link PrinterBlockEntity#playerDepositArea} that qualify {@link PrinterBlockEntity#canDepositXP(PlayerEntity)}
+	 * Searches for players within the {@link PrinterBlockEntity#playerDepositArea} that qualify {@link PrinterBlockEntity#canDepositXP(Entity)}
 	 * and takes some experience points from them, more if they're jumping.
 	 */
 	public void gatherXP(World world, BlockPos pos) {
 		List<PlayerEntity> players = world.getEntitiesByClass(PlayerEntity.class, playerDepositArea, PrinterBlockEntity::canDepositXP);
 		for (PlayerEntity player : players) {
-			int amount = adjustAmount(player.isOnGround() ? 1 : 3);
+			int amount = capXPDepositAmount(player.isOnGround() ? 1 : 3);
 			player.addExperience(-amount);
 			depositXP(world, pos, amount, player.isOnGround() ? 0.3f : 0.5f);
 		}
 	}
 
+	/**
+	 * Searches for XP orbs within the {@link PrinterBlockEntity#orbDepositArea} that wuality {@link PrinterBlockEntity#canDepositXP(Entity)}
+	 * and sets their target to the printer's block position.
+	 */
 	public void lureXPOrbs(World world, BlockPos pos) {
 		List<ExperienceOrbEntity> orbs = world.getEntitiesByClass(ExperienceOrbEntity.class, orbDepositArea, PrinterBlockEntity::canDepositXP);
 		for (ExperienceOrbEntity orb : orbs) {
@@ -331,7 +351,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 	public void readNbt(NbtCompound nbt) {
 		super.readNbt(nbt);
 		Inventories.readNbt(nbt, items);
-		rules = PrinterRule.readNbt(nbt);
+		rules = PrinterRules.readNbt(nbt);
 		xp = nbt.getInt("XP");
 		requiredXP = nbt.getInt("RequiredXP");
 		progress = nbt.getInt("Progress");
@@ -343,7 +363,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 	protected void writeNbt(NbtCompound nbt) {
 		Inventories.writeNbt(nbt, items);
 		if (rules != null) {
-			PrinterRule.writeNbt(nbt, rules);
+			rules.writeNbt(nbt);
 		}
 		nbt.putInt("XP", xp);
 		nbt.putInt("RequiredXP", requiredXP);
@@ -370,5 +390,6 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 				ThePrinter.id("printer_block_entity"),
 				FabricBlockEntityTypeBuilder.create(PrinterBlockEntity::new, PrinterBlock.INSTANCE).build()
 		);
+		Registry.register(DataCriteriaAPI.getRegistry(), ThePrinter.id("rarity"), DataCriteriaAPI.createEnum(Rarity.class));
 	}
 }
