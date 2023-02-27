@@ -1,6 +1,7 @@
 package com.acikek.theprinter.world;
 
 import com.acikek.theprinter.ThePrinter;
+import com.acikek.theprinter.client.ThePrinterClient;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
@@ -13,6 +14,7 @@ import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameRules;
+import net.minecraft.world.World;
 
 public class ModGameRules implements ServerPlayConnectionEvents.Join {
 
@@ -20,6 +22,18 @@ public class ModGameRules implements ServerPlayConnectionEvents.Join {
 	public static GameRules.Key<GameRules.BooleanRule> XP_REQUIRED;
 
 	public static final Identifier GAMERULES_CHANGED = ThePrinter.id("gamerules_changed");
+
+	public static boolean isPrinterEnabled(World world) {
+		return world.isClient()
+				? ThePrinterClient.printerEnabled
+				: world.getGameRules().getBoolean(ModGameRules.PRINTER_ENABLED);
+	}
+
+	public static boolean isXPRequired(World world) {
+		return world.isClient()
+				? ThePrinterClient.xpRequired
+				: world.getGameRules().getBoolean(ModGameRules.XP_REQUIRED);
+	}
 
 	public static PacketByteBuf getReloadBuf(GameRules gameRules) {
 		PacketByteBuf buf = PacketByteBufs.create();

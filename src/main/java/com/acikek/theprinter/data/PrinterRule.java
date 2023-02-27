@@ -76,28 +76,14 @@ public class PrinterRule {
 		return true;
 	}
 
-	public static List<Map.Entry<Identifier, PrinterRule>> getMatchingRules(ItemStack stack) {
+	public static PrinterRules getMatchingRules(ItemStack stack) {
 		if (RULES.isEmpty()) {
-			return Collections.emptyList();
+			return new PrinterRules(Collections.emptyList());
 		}
-		return RULES.entrySet().stream()
+		var list = RULES.entrySet().stream()
 				.filter(pair -> pair.getValue().input.test(stack))
 				.toList();
-	}
-
-	public static List<Map.Entry<Identifier, PrinterRule>> filterByType(List<Map.Entry<Identifier, PrinterRule>> rules, Type type, Object sourceObject) {
-		var result = rules.stream()
-				.filter(rule -> rule.getValue().types.contains(type))
-				.toList();
-		if (type.exclusive && result.size() > 1) {
-			List<String> ids = result.stream()
-					.map(Map.Entry::getKey)
-					.map(Identifier::toString)
-					.toList();
-			String joined = String.join(", ", ids);
-			ThePrinter.LOGGER.warn("Multiple " + type + " rules for object '" + sourceObject + "': " + joined);
-		}
-		return result;
+		return new PrinterRules(list);
 	}
 
 	public static int getRarityXPMultiplier(Rarity rarity) {
@@ -123,58 +109,6 @@ public class PrinterRule {
 		int rarityMultiplier = getRarityXPMultiplier(stack.getRarity());
 		int nbtCost = getNbtXPCost(stack);
 		return (baseCost * materialMultiplier * rarityMultiplier) + nbtCost;
-	}
-
-	public static int getRequiredXP(List<Map.Entry<Identifier, PrinterRule>> rules, ItemStack stack) {
-		var overrides = PrinterRule.filterByType(rules, PrinterRule.Type.OVERRIDE, stack);
-		if (!overrides.isEmpty()) {
-			return overrides.get(0).getValue().override.orElse(0);
-		}
-		int baseXP = getBaseXP(stack);
-		var modifiers = PrinterRule.filterByType(rules, PrinterRule.Type.MODIFIER, null);
-		if (!modifiers.isEmpty()) {
-			double result = baseXP;
-			List<Expression> expressions = modifiers.stream()
-					.map(rule -> rule.getValue().expression)
-					.filter(Objects::nonNull)
-					.toList();
-			for (Expression expression : expressions) {
-				result = expression
-						.with("value", BigDecimal.valueOf(result))
-						.with("size", BigDecimal.valueOf(stack.getCount()))
-						.eval().doubleValue();
-			}
-			return (int) result;
-		}
-		return baseXP;
-	}
-
-	public static List<Map.Entry<Identifier, PrinterRule>> readNbt(NbtCompound nbt) {
-		if (!nbt.contains("Rules")) {
-			return null;
-		}
-		NbtList ids = nbt.getList("Rules", NbtList.STRING_TYPE);
-		List<Map.Entry<Identifier, PrinterRule>> list = new ArrayList<>();
-		for (NbtElement element : ids) {
-			Identifier id = Identifier.tryParse(element.asString());
-			if (!RULES.containsKey(id)) {
-				ThePrinter.LOGGER.error("Unknown rule '" + id + "'");
-				continue;
-			}
-			list.add(new AbstractMap.SimpleImmutableEntry<>(id, RULES.get(id)));
-		}
-		return list;
-	}
-
-	public static void writeNbt(NbtCompound nbt, List<Map.Entry<Identifier, PrinterRule>> rules) {
-		List<NbtString> ids = rules.stream()
-				.map(Map.Entry::getKey)
-				.map(Identifier::toString)
-				.map(NbtString::of)
-				.toList();
-		NbtList list = new NbtList();
-		list.addAll(ids);
-		nbt.put("Rules", list);
 	}
 
 	public static PrinterRule fromJson(JsonObject obj) {

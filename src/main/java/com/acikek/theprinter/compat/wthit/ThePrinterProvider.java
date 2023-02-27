@@ -1,6 +1,7 @@
 package com.acikek.theprinter.compat.wthit;
 
 import com.acikek.theprinter.block.PrinterBlockEntity;
+import com.acikek.theprinter.world.ModGameRules;
 import mcp.mobius.waila.api.*;
 import mcp.mobius.waila.api.component.ItemComponent;
 import mcp.mobius.waila.api.component.ProgressArrowComponent;
@@ -39,7 +40,7 @@ public class ThePrinterProvider implements IBlockComponentProvider, IServerDataP
 			if (printer.progress > 0) {
 				data.putFloat("WProgress", (float) printer.progress / printer.requiredTicks);
 			}
-			else if (printer.isXPRequired(accessor.getWorld()) && printer.requiredXP > 0) {
+			else if (ModGameRules.isXPRequired(accessor.getWorld()) && printer.requiredXP > 0) {
 				Text text = Text.literal("XP: " + (printer.xp + "/" + printer.requiredXP));
 				data.putString("WXP", Text.Serializer.toJson(text));
 			}
