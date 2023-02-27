@@ -105,8 +105,8 @@ public class PrinterBlockEntityRenderer implements BlockEntityRenderer<PrinterBl
 		if (entity.xp > 0) {
 			renderProgressBar(matrices, vertexConsumers, lightFront, (float) entity.xp / entity.requiredXP);
 		}
-		if (!entity.getStack(0).isEmpty()) {
-			renderScreenStack(entity.getStack(0), matrices, vertexConsumers, lightFront, overlay, seed);
+		if (!entity.getItems().get(0).isEmpty()) {
+			renderScreenStack(entity.getItems().get(0), matrices, vertexConsumers, lightFront, overlay, seed);
 		}
 		matrices.pop();
 		// Adjust printing end tick offsets for smoother transitions
@@ -118,10 +118,10 @@ public class PrinterBlockEntityRenderer implements BlockEntityRenderer<PrinterBl
 			entity.endOffset = -1;
 		}
 		// Render top printing stack
-		if ((state.get(PrinterBlock.PRINTING) || finished) && !entity.getStack(1).isEmpty()) {
+		if ((state.get(PrinterBlock.PRINTING) || finished) && !entity.getItems().get(1).isEmpty()) {
 			int lightAbove = getLight(entity.getWorld(), entity.getPos().up(), light);
 			float progress = finished ? 1.0f : ((float) entity.progress / entity.requiredTicks);
-			renderPrintingStack(entity.getStack(1), tickDelta, matrices, vertexConsumers, lightAbove, overlay, seed, progress, finished, entity.endOffset);
+			renderPrintingStack(entity.getItems().get(1), tickDelta, matrices, vertexConsumers, lightAbove, overlay, seed, progress, finished, entity.endOffset);
 		}
 		matrices.pop();
 	}

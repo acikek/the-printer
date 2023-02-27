@@ -3,6 +3,7 @@ package com.acikek.theprinter.compat.emi;
 import com.acikek.theprinter.ThePrinter;
 import com.acikek.theprinter.client.ThePrinterClient;
 import com.acikek.theprinter.data.PrinterRule;
+import com.acikek.theprinter.data.PrinterRules;
 import dev.emi.emi.api.recipe.EmiRecipe;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.render.EmiTexture;
@@ -43,7 +44,7 @@ public class ThePrinterEmiRecipe implements EmiRecipe {
 		}
 	}
 
-	public Map.Entry<List<Map.Entry<Identifier, PrinterRule>>, List<EmiStack>> data;
+	public Map.Entry<PrinterRules, List<EmiStack>> data;
 	public EmiIngredient input;
 	public List<EmiStack> output;
 	public Identifier id;
@@ -54,7 +55,7 @@ public class ThePrinterEmiRecipe implements EmiRecipe {
 	public int requiredTicks;
 	public boolean doXPText;
 
-	public ThePrinterEmiRecipe(Map.Entry<List<Map.Entry<Identifier, PrinterRule>>, List<EmiStack>> data) {
+	public ThePrinterEmiRecipe(Map.Entry<PrinterRules, List<EmiStack>> data) {
 		this.data = data;
 		List<EmiStack> stacks = data.getValue();
 		input = EmiIngredient.of(stacks);
@@ -65,7 +66,7 @@ public class ThePrinterEmiRecipe implements EmiRecipe {
 	}
 
 	public Stream<Identifier> getRuleIds() {
-		return data.getKey().stream().map(Map.Entry::getKey);
+		return data.getKey().rules().stream().map(Map.Entry::getKey);
 	}
 
 	public Identifier createId() {
@@ -87,7 +88,7 @@ public class ThePrinterEmiRecipe implements EmiRecipe {
 	}
 
 	public int getMaxStackSize() {
-		List<PrinterRule> sizeRules = data.getKey().stream()
+		List<PrinterRule> sizeRules = data.getKey().rules().stream()
 				.map(Map.Entry::getValue)
 				.filter(rule -> rule.types.contains(PrinterRule.Type.SIZE))
 				.toList();
@@ -96,7 +97,7 @@ public class ThePrinterEmiRecipe implements EmiRecipe {
 
 	public void update() {
 		ItemStack stack = data.getValue().get(0).getItemStack().withCount(stackSize);
-		requiredXP = Math.max(1, PrinterRule.getRequiredXP(data.getKey(), stack));
+		requiredXP = Math.max(1, data.getKey().getRequiredXP(stack));
 		requiredTicks = requiredXP * 3;
 		if (!ThePrinterClient.xpRequired) {
 			requiredXP = 0;
