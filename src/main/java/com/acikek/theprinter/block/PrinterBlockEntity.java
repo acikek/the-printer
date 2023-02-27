@@ -5,7 +5,6 @@ import com.acikek.theprinter.ThePrinter;
 import com.acikek.theprinter.data.PrinterRule;
 import com.acikek.theprinter.data.PrinterRules;
 import com.acikek.theprinter.sound.ModSoundEvents;
-import com.acikek.theprinter.util.ImplementedInventory;
 import com.acikek.theprinter.util.PrinterExperienceOrbEntity;
 import com.acikek.theprinter.world.ModGameRules;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
@@ -16,7 +15,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventories;
-import net.minecraft.inventory.SidedInventory;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -36,14 +34,13 @@ import net.minecraft.util.Rarity;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class PrinterBlockEntity extends BlockEntity implements SidedInventory, ImplementedInventory {
+public class PrinterBlockEntity extends BlockEntity {
 
 	public static final int PRINTING_INTERVAL = 180;
 	public static final int PAPER_MESSAGE_COUNT = 6;
@@ -53,14 +50,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 	public Box playerDepositArea;
 	public Box orbDepositArea;
 
-	/**
-	 * The printer's inventory.
-	 * <p>
-	 * The first stack will show up on the screen. It should be an exact copy of the input stack.<br>
-	 * The second stack will render above the machine as it is printing the item. It is allowed to differ from the original stack.
-	 * </p>
-	 */
-	public DefaultedList<ItemStack> items = DefaultedList.ofSize(2, ItemStack.EMPTY);
+	public PrinterBlockStorage storage = new PrinterBlockStorage(this);
 
 	public PrinterRules rules;
 	public int xp = 0;
@@ -113,7 +103,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		int stackCount = Math.min(handStack.getCount(), rules.getMaxInsertCount(handStack));
 		ItemStack copy = handStack.copy();
 		copy.setCount(stackCount);
-		setStack(0, copy);
+		getItems().set(0, copy);
 		if (!player.isCreative()) {
 			handStack.decrement(stackCount);
 		}
@@ -153,28 +143,28 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		}
 	}
 
+	public void setFinished(World world, BlockPos pos, BlockState state) {
+		world.setBlockState(pos, state.with(PrinterBlock.FINISHED, false));
+		xp = 0;
+	}
+
 	/**
 	 * @param player if {@code null}, can be used as a callback for non-player interactions
 	 * @return whether the printed stack has been fully removed
 	 */
 	public boolean removePrintedItem(World world, BlockPos pos, BlockState state, PlayerEntity player) {
-		ItemStack stack = getStack(1);
-		if (player != null && !stack.isEmpty()) {
-			if (player instanceof ServerPlayerEntity serverPlayer) {
-				triggerPrinterUsed(serverPlayer, requiredXP, requiredTicks, stack, stack.getRarity());
-			}
-			if (!player.isCreative()) {
-				player.giveItemStack(stack);
-			}
-			setStack(1, ItemStack.EMPTY);
+		ItemStack stack = getItems().get(1);
+		if (player instanceof ServerPlayerEntity serverPlayer) {
+			triggerPrinterUsed(serverPlayer, requiredXP, requiredTicks, stack, stack.getRarity());
 		}
-		if (getStack(1).isEmpty()) {
-			world.setBlockState(pos, state.with(PrinterBlock.FINISHED, false));
-			xp = 0;
-			if (player != null && !ModGameRules.isXPRequired(world)) {
-				removeItem(world, pos, player);
-				return true;
-			}
+		if (!player.isCreative()) {
+			player.giveItemStack(stack);
+		}
+		getItems().set(1, ItemStack.EMPTY);
+		setFinished(world, pos, state);
+		if (!ModGameRules.isXPRequired(world)) {
+			removeItem(world, pos, player);
+			return true;
 		}
 		return false;
 	}
@@ -183,7 +173,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 	 * Removes the item being printed and resets all values corresponding to it.
 	 */
 	public void removeItem(World world, BlockPos pos, PlayerEntity player) {
-		ItemStack removed = removeStack(0);
+		ItemStack removed = Inventories.removeStack(getItems(), 0);
 		if (!player.isCreative()) {
 			player.giveItemStack(removed);
 		}
@@ -200,10 +190,10 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 	 * @return only the inventory of the first stack and not the façade stack used for the printing display
 	 */
 	public DefaultedList<ItemStack> getMaterialInventory(BlockState state) {
-		if (getStack(1).isEmpty() || state.get(PrinterBlock.FINISHED)) {
+		if (getItems().get(1).isEmpty() || state.get(PrinterBlock.FINISHED)) {
 			return getItems();
 		}
-		return DefaultedList.copyOf(ItemStack.EMPTY, getStack(0));
+		return DefaultedList.copyOf(ItemStack.EMPTY, getItems().get(0));
 	}
 
 	/**
@@ -270,9 +260,9 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 
 	public void startPrinting(World world, BlockPos pos, BlockState state) {
 		world.setBlockState(pos, state.with(PrinterBlock.PRINTING, true));
-		ItemStack printingStack = getStack(0).copy();
+		ItemStack printingStack = getItems().get(0).copy();
 		modifyPrintingStack(world, printingStack);
-		setStack(1, printingStack);
+		getItems().set(1, printingStack);
 		// Add one to the tick offset since the sound will begin next tick
 		startOffset = getTickOffset(world) + 1;
 	}
@@ -303,7 +293,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 			// Lure nearby vacant XP orbs
 			blockEntity.lureXPOrbs(world, pos);
 			// If the machine has enough XP, start the printing process
-			if (!blockEntity.isEmpty() && blockEntity.xp >= blockEntity.requiredXP) {
+			if (!blockEntity.getItems().isEmpty() && blockEntity.xp >= blockEntity.requiredXP) {
 				blockEntity.startPrinting(world, pos, state);
 			}
 		}
@@ -315,43 +305,14 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 		}
 	}
 
-	@Override
 	public DefaultedList<ItemStack> getItems() {
-		return items;
-	}
-
-	@Override
-	public int[] getAvailableSlots(Direction side) {
-		if (side == Direction.DOWN) {
-			return new int[] { 1 };
-		}
-		return new int[0];
-	}
-
-	@Override
-	public boolean canInsert(int slot, ItemStack stack, @Nullable Direction dir) {
-		return false;
-	}
-
-	@Override
-	public boolean canExtract(int slot, ItemStack stack, Direction dir) {
-		return dir == Direction.DOWN && getCachedState().get(PrinterBlock.FINISHED);
-	}
-
-	@Override
-	public ItemStack removeStack(int slot, int count) {
-		if (slot == 0) {
-			return ItemStack.EMPTY;
-		}
-		ItemStack stack = ImplementedInventory.super.removeStack(slot, count);
-		removePrintedItem(world, pos, getCachedState(), null);
-		return stack;
+		return storage.items;
 	}
 
 	@Override
 	public void readNbt(NbtCompound nbt) {
 		super.readNbt(nbt);
-		Inventories.readNbt(nbt, items);
+		Inventories.readNbt(nbt, getItems());
 		rules = PrinterRules.readNbt(nbt);
 		xp = nbt.getInt("XP");
 		requiredXP = nbt.getInt("RequiredXP");
@@ -362,7 +323,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 
 	@Override
 	protected void writeNbt(NbtCompound nbt) {
-		Inventories.writeNbt(nbt, items);
+		Inventories.writeNbt(nbt, getItems());
 		if (rules != null) {
 			rules.writeNbt(nbt);
 		}
@@ -391,6 +352,7 @@ public class PrinterBlockEntity extends BlockEntity implements SidedInventory, I
 				ThePrinter.id("printer_block_entity"),
 				FabricBlockEntityTypeBuilder.create(PrinterBlockEntity::new, PrinterBlock.INSTANCE).build()
 		);
+		PrinterBlockStorage.register();
 		Registry.register(DataCriteriaAPI.getRegistry(), ThePrinter.id("rarity"), DataCriteriaAPI.createEnum(Rarity.class));
 	}
 }

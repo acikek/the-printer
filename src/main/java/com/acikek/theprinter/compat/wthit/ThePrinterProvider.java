@@ -34,8 +34,8 @@ public class ThePrinterProvider implements IBlockComponentProvider, IServerDataP
 	public void appendServerData(NbtCompound data, IServerAccessor<PrinterBlockEntity> accessor, IPluginConfig config) {
 		if (config.getBoolean(ThePrinterWailaPlugin.PRINTER_INFO)) {
 			PrinterBlockEntity printer = accessor.getTarget();
-			if (!printer.items.isEmpty()) {
-				data.put("WInput", printer.items.get(0).copy().writeNbt(new NbtCompound()));
+			if (!printer.getItems().isEmpty()) {
+				data.put("WInput", printer.getItems().get(0).copy().writeNbt(new NbtCompound()));
 			}
 			if (printer.progress > 0) {
 				data.putFloat("WProgress", (float) printer.progress / printer.requiredTicks);

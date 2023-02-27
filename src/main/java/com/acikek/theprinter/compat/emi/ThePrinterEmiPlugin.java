@@ -4,6 +4,7 @@ import com.acikek.theprinter.ThePrinter;
 import com.acikek.theprinter.block.PrinterBlock;
 import com.acikek.theprinter.client.ThePrinterClient;
 import com.acikek.theprinter.data.PrinterRule;
+import com.acikek.theprinter.data.PrinterRules;
 import dev.emi.emi.api.EmiPlugin;
 import dev.emi.emi.api.EmiRegistry;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
@@ -13,6 +14,7 @@ import net.minecraft.util.Identifier;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class ThePrinterEmiPlugin implements EmiPlugin {
 
@@ -52,7 +54,7 @@ public class ThePrinterEmiPlugin implements EmiPlugin {
 				.toList();
 	}
 
-	public static Map<List<Map.Entry<Identifier, PrinterRule>>, List<EmiStack>> mapRulesToStacks(List<Map.Entry<Identifier, PrinterRule>> relevantRules) {
+	public static Map<PrinterRules, List<EmiStack>> mapRulesToStacks(List<Map.Entry<Identifier, PrinterRule>> relevantRules) {
 		Map<EmiStack, List<Map.Entry<Identifier, PrinterRule>>> stacksToRules = new HashMap<>();
 		List<PrinterRule> ruleList = relevantRules.stream()
 				.map(Map.Entry::getValue)
@@ -76,7 +78,8 @@ public class ThePrinterEmiPlugin implements EmiPlugin {
 				rulesToStacks.put(hasRules ? new ArrayList<>(entry.getValue()) : entry.getValue(), listStart);
 			}
 		}
-		return rulesToStacks;
+		return rulesToStacks.entrySet().stream()
+				.collect(Collectors.toMap(entry -> new PrinterRules(entry.getKey()), Map.Entry::getValue));
 	}
 
 	@Override
