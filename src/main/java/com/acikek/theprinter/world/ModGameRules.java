@@ -2,6 +2,7 @@ package com.acikek.theprinter.world;
 
 import com.acikek.theprinter.ThePrinter;
 import com.acikek.theprinter.client.ThePrinterClient;
+import net.fabricmc.fabric.api.gamerule.v1.CustomGameRuleCategory;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
@@ -12,11 +13,19 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 
 public class ModGameRules implements ServerPlayConnectionEvents.Join {
+
+	public static final CustomGameRuleCategory CATEGORY = new CustomGameRuleCategory(
+			ThePrinter.id("the_printer"),
+			Text.translatable("gamerule.category.the_printer")
+					.formatted(Formatting.BOLD, Formatting.AQUA)
+	);
 
 	public static GameRules.Key<GameRules.BooleanRule> PRINTER_ENABLED;
 	public static GameRules.Key<GameRules.BooleanRule> XP_REQUIRED;
@@ -57,13 +66,11 @@ public class ModGameRules implements ServerPlayConnectionEvents.Join {
 
 	public static void register() {
 		PRINTER_ENABLED = GameRuleRegistry.register(
-				"enablePrinter",
-				GameRules.Category.MISC,
+				"theprinter:enablePrinter", CATEGORY,
 				GameRuleFactory.createBooleanRule(true, (server, r) -> syncGameRule(server))
 		);
 		XP_REQUIRED = GameRuleRegistry.register(
-				"requirePrinterXP",
-				GameRules.Category.MISC,
+				"theprinter:requirePrinterXP", CATEGORY,
 				GameRuleFactory.createBooleanRule(true, (server, r) -> syncGameRule(server))
 		);
 		ServerPlayConnectionEvents.JOIN.register(new ModGameRules());
