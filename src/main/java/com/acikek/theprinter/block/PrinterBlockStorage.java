@@ -89,17 +89,4 @@ public class PrinterBlockStorage {
 	public static void register() {
 		ItemStorage.SIDED.registerForBlockEntity(PrinterBlockStorage::getExposedStorage, PrinterBlockEntity.BLOCK_ENTITY_TYPE);
 	}
-
-	/*
-	@Override
-	protected void onFinalCommit() {
-		printer.markDirty();
-		if (!printer.getWorld().isClient()) {
-			PacketByteBuf buf = PacketByteBufs.create();
-			variant.toPacket(buf);
-			for (ServerPlayerEntity player : PlayerLookup.tracking(printer)) {
-				ServerPlayNetworking.send(player, UPDATE, buf);
-			}
-		}
-	}*/
 }
