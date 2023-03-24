@@ -14,7 +14,8 @@ import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactories;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
 import net.minecraft.client.render.item.ItemRenderer;
-import net.minecraft.client.render.model.json.ModelTransformation;
+import net.minecraft.client.render.model.BakedModel;
+import net.minecraft.client.render.model.json.ModelTransformationMode;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
@@ -69,7 +70,8 @@ public class PrinterBlockEntityRenderer implements BlockEntityRenderer<PrinterBl
 		matrices.translate(0.0, -0.06, 0.0);
 		matrices.scale(0.4f, 0.4f, 1);
 		matrices.multiplyMatrix(new Matrix4f().scale(1, 1, 0.01f));
-		itemRenderer.renderItem(stack, ModelTransformation.Mode.GUI, lightFront, overlay, matrices, vertexConsumers, seed);
+		BakedModel model = itemRenderer.getHeldItemModel(stack, null, null, seed);
+		itemRenderer.renderItem(stack, ModelTransformationMode.GUI, false, matrices, vertexConsumers, lightFront, overlay, model);
 		matrices.pop();
 	}
 
@@ -91,7 +93,8 @@ public class PrinterBlockEntityRenderer implements BlockEntityRenderer<PrinterBl
 		VertexConsumerProvider vcp = !finished && vertexConsumers instanceof VertexConsumerProvider.Immediate immediate
 				? new TranslucentVertexConsumerProvider(immediate, progress)
 				: vertexConsumers;
-		itemRenderer.renderItem(stack, ModelTransformation.Mode.GROUND, lightAbove, overlay, matrices, vcp, seed);
+		BakedModel model = itemRenderer.getHeldItemModel(stack, null, null, seed);
+		itemRenderer.renderItem(stack, ModelTransformationMode.GROUND, false, matrices, vcp, lightAbove, overlay, model);
 		matrices.pop();
 	}
 

@@ -12,7 +12,7 @@ import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
-import net.minecraft.network.packet.s2c.play.StopSoundS2CPacket;
+import net.minecraft.network.packet.s2c.play.SoundStopS2CPacket;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -115,7 +115,7 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 	}
 
 	public static void stopPrintingSound(ServerWorld world, BlockPos pos) {
-		StopSoundS2CPacket packet = new StopSoundS2CPacket(ModSoundEvents.PRINTING.getId(), SoundCategory.BLOCKS);
+		SoundStopS2CPacket packet = new SoundStopS2CPacket(ModSoundEvents.PRINTING.getId(), SoundCategory.BLOCKS);
 		for (ServerPlayerEntity player : PlayerLookup.tracking(world, pos)) {
 			player.networkHandler.sendPacket(packet);
 		}
@@ -183,7 +183,7 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 		Registry.register(Registries.BLOCK, id, INSTANCE);
 		BlockItem blockItem = new BlockItem(INSTANCE, new FabricItemSettings().rarity(Rarity.RARE));
 		Registry.register(Registries.ITEM, id, blockItem);
-		ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(entries -> {
+		ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL_BLOCKS).register(entries -> {
 			entries.addAfter(Blocks.ENCHANTING_TABLE, blockItem);
 		});
 	}
