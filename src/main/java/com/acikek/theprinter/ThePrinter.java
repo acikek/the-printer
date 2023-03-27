@@ -24,8 +24,11 @@ public class ThePrinter implements ModInitializer {
 
 	public static final Logger LOGGER = LoggerFactory.getLogger(ID);
 
+	public static boolean IS_SODIUM;
+
 	@Override
 	public void onInitialize() {
+		IS_SODIUM = FabricLoader.getInstance().isModLoaded("sodium");
 		LOGGER.info("The Printer - Have your XP ready!");
 		PrinterBlock.register();
 		PrinterBlockEntity.register();
