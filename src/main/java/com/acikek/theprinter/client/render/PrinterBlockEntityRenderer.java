@@ -88,7 +88,8 @@ public class PrinterBlockEntityRenderer implements BlockEntityRenderer<PrinterBl
 		}
 		matrices.multiply(Axis.Y_POSITIVE.rotation(getAngle(tickDelta, 0)));
 		matrices.scale(1.3f, 1.3f, 1.3f);
-		VertexConsumerProvider vcp = !finished && vertexConsumers instanceof VertexConsumerProvider.Immediate immediate
+		// Temporarily disable translucent vertex buffers until Sodium releases its API
+		VertexConsumerProvider vcp = !ThePrinter.IS_SODIUM && !finished && vertexConsumers instanceof VertexConsumerProvider.Immediate immediate
 				? new TranslucentVertexConsumerProvider(immediate, progress)
 				: vertexConsumers;
 		itemRenderer.renderItem(stack, ModelTransformation.Mode.GROUND, lightAbove, overlay, matrices, vcp, seed);
