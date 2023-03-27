@@ -1,7 +1,7 @@
 {
   "block.theprinter.the_printer": "Yazıcı",
-  "gamerule.enablePrinter": "Yazıcı'yı Etkinleştir",
-  "gamerule.requirePrinterXP": "Yazıcı XP girişi gerekli",
+  "gamerule.theprinter:enablePrinter": "Yazıcı'yı Etkinleştir",
+  "gamerule.theprinter:requirePrinterXP": "Yazıcı XP girişi gerekli",
   "advancements.theprinter.use_printer.title": "Yazıcı",
   "advancements.theprinter.use_printer.description": "Yazıcı ile bir eşyayı çoğalt",
   "advancements.theprinter.print_paper.title": "Aşırı Mühendislik",
