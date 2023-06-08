@@ -1,22 +1,17 @@
 package com.acikek.theprinter.data;
 
-import com.acikek.theprinter.ThePrinter;
 import com.google.gson.JsonObject;
 import com.udojava.evalex.Expression;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ToolItem;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.recipe.Ingredient;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
 import net.minecraft.util.Rarity;
 
-import java.math.BigDecimal;
 import java.util.*;
 
 public class PrinterRule {
@@ -112,7 +107,7 @@ public class PrinterRule {
 	}
 
 	public static PrinterRule fromJson(JsonObject obj) {
-		Ingredient input = Ingredient.fromJson(obj.get("input"));
+		Ingredient input = Ingredient.method_8102(obj.get("input"), false);
 		int override = JsonHelper.getInt(obj, "override", -1);
 		String modifier = JsonHelper.getString(obj, "modifier", null);
 		int size = JsonHelper.getInt(obj, "size", -1);

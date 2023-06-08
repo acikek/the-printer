@@ -52,7 +52,7 @@ public abstract class ExperienceOrbEntityMixin implements PrinterExperienceOrbEn
 		if (theprinter$printerTarget == null) {
 			return;
 		}
-		else if (!PrinterBlock.canDepositXP(entity.world.getBlockState(theprinter$printerTarget))) {
+		else if (!PrinterBlock.canDepositXP(entity.getWorld().getBlockState(theprinter$printerTarget))) {
 			theprinter$printerTarget = null;
 			return;
 		}
@@ -61,8 +61,8 @@ public abstract class ExperienceOrbEntityMixin implements PrinterExperienceOrbEn
 			return;
 		}
 		Vec3d difference = Vec3d.ofCenter(theprinter$printerTarget).subtract(entity.getPos());
-		if (difference.length() < 1.2 && entity.world.getBlockEntity(theprinter$printerTarget) instanceof PrinterBlockEntity blockEntity) {
-			blockEntity.depositXP(entity.world, theprinter$printerTarget, blockEntity.capXPDepositAmount(getExperienceAmount()), 0.0f);
+		if (difference.length() < 1.2 && entity.getWorld().getBlockEntity(theprinter$printerTarget) instanceof PrinterBlockEntity blockEntity) {
+			blockEntity.depositXP(entity.getWorld(), theprinter$printerTarget, blockEntity.capXPDepositAmount(getExperienceAmount()), 0.0f);
 			entity.discard();
 			return;
 		}

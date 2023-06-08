@@ -42,7 +42,7 @@ public class PrinterBlock extends HorizontalFacingBlock implements BlockEntityPr
 	public static final BooleanProperty PRINTING = BooleanProperty.of("printing");
 	public static final BooleanProperty FINISHED = BooleanProperty.of("finished");
 
-	public static final Settings SETTINGS = FabricBlockSettings.of(Material.METAL)
+	public static final Settings SETTINGS = FabricBlockSettings.create()
 			.sounds(BlockSoundGroup.METAL)
 			.strength(6.0f, 6.0f)
 			.luminance(value -> value.get(PRINTING) ? 9 : value.get(ON) ? 6 : 1);

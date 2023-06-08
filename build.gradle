@@ -60,7 +60,8 @@ dependencies {
 	modImplementation include("maven.modrinth:data-criteria:${project.datacriteria_version}")
 
 	// EMI
-	modImplementation "dev.emi:emi:${project.emi_version}"
+	modCompileOnly "dev.emi:emi-fabric:${project.emi_version}:api"
+	modLocalRuntime "dev.emi:emi-fabric:${project.emi_version}"
 
 	// WTHIT API
 	modCompileOnly "mcp.mobius.waila:wthit-api:fabric-${project.wthit_version}"

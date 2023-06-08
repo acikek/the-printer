@@ -10,8 +10,8 @@ import dev.emi.emi.api.render.EmiTexture;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.widget.*;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.tooltip.TooltipComponent;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
@@ -152,11 +152,11 @@ public class ThePrinterEmiRecipe implements EmiRecipe {
 		}
 
 		@Override
-		public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-			matrices.push();
-			matrices.translate(0.0, 0.0, 1.0);
-			super.render(matrices, mouseX, mouseY, delta);
-			matrices.pop();
+		public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+			graphics.getMatrices().push();
+			graphics.getMatrices().translate(0.0, 0.0, 1.0);
+			super.render(graphics, mouseX, mouseY, delta);
+			graphics.getMatrices().pop();
 		}
 	}
 
