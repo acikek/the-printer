@@ -107,7 +107,7 @@ public class PrinterRule {
 	}
 
 	public static PrinterRule fromJson(JsonObject obj) {
-		Ingredient input = Ingredient.method_8102(obj.get("input"), false);
+		Ingredient input = Ingredient.fromJson(obj.get("input"), false);
 		int override = JsonHelper.getInt(obj, "override", -1);
 		String modifier = JsonHelper.getString(obj, "modifier", null);
 		int size = JsonHelper.getInt(obj, "size", -1);

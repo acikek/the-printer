@@ -70,10 +70,8 @@ dependencies {
 	modRuntimeOnly "mcp.mobius.waila:wthit:fabric-${project.wthit_version}"
 	modRuntimeOnly "lol.bai:badpackets:fabric-0.2.0"
 
-	// Sodium Compatibility Testing
-	if (project.test_sodium == "true") {
-		modRuntimeOnly "maven.modrinth:sodium:mc${project.sodium_version}"
-	}
+	// Sodium
+	modImplementation "maven.modrinth:sodium:mc${project.sodium_version}"
 }
 
 processResources {
