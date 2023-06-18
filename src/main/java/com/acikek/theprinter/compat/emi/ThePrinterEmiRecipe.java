@@ -96,7 +96,8 @@ public class ThePrinterEmiRecipe implements EmiRecipe {
 	}
 
 	public void update() {
-		ItemStack stack = data.getValue().get(0).getItemStack().withCount(stackSize);
+		ItemStack stack = data.getValue().get(0).getItemStack().copy();
+		stack.setCount(stackSize);
 		requiredXP = Math.max(1, data.getKey().getRequiredXP(stack));
 		requiredTicks = requiredXP * 3;
 		if (!ThePrinterClient.xpRequired) {

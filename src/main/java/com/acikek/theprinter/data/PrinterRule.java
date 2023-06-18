@@ -1,22 +1,17 @@
 package com.acikek.theprinter.data;
 
-import com.acikek.theprinter.ThePrinter;
 import com.google.gson.JsonObject;
 import com.udojava.evalex.Expression;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ToolItem;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.recipe.Ingredient;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
 import net.minecraft.util.Rarity;
 
-import java.math.BigDecimal;
 import java.util.*;
 
 public class PrinterRule {
