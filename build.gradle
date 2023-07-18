@@ -36,6 +36,11 @@ repositories {
 	maven {
 		url = "https://maven.bai.lol"
 	}
+
+	maven {
+		name = "JitPack"
+		url = "https://jitpack.io"
+	}
 }
 
 configurations {
@@ -58,6 +63,7 @@ dependencies {
 
 	// Data Criteria
 	modImplementation include("maven.modrinth:data-criteria:${project.datacriteria_version}")
+	include(implementation(annotationProcessor("com.github.llamalad7.mixinextras:mixinextras-fabric:0.2.0-beta.9")))
 
 	// EMI
 	modImplementation "dev.emi:emi:${project.emi_version}"
