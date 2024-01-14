@@ -2,6 +2,7 @@ package com.acikek.theprinter;
 
 import com.acikek.theprinter.block.PrinterBlock;
 import com.acikek.theprinter.block.PrinterBlockEntity;
+import com.acikek.theprinter.data.ModTags;
 import com.acikek.theprinter.sound.ModSoundEvents;
 import com.acikek.theprinter.world.ModGameRules;
 import com.acikek.theprinter.world.PrinterRuleReloader;
@@ -34,6 +35,7 @@ public class ThePrinter implements ModInitializer {
 		PrinterBlockEntity.register();
 		ModSoundEvents.register();
 		ModGameRules.register();
+		ModTags.register();
 		PrinterRuleReloader.register();
 		registerDatapack();
 	}
