@@ -4,6 +4,7 @@ import com.acikek.datacriteria.api.DataCriteriaAPI;
 import com.acikek.theprinter.ThePrinter;
 import com.acikek.theprinter.data.PrinterRule;
 import com.acikek.theprinter.data.PrinterRules;
+import com.acikek.theprinter.data.ModTags;
 import com.acikek.theprinter.sound.ModSoundEvents;
 import com.acikek.theprinter.util.PrinterExperienceOrbEntity;
 import com.acikek.theprinter.world.ModGameRules;
@@ -261,6 +262,9 @@ public class PrinterBlockEntity extends BlockEntity {
 	public void startPrinting(World world, BlockPos pos, BlockState state) {
 		world.setBlockState(pos, state.with(PrinterBlock.PRINTING, true));
 		ItemStack printingStack = getItems().get(0).copy();
+		if (printingStack.isIn(ModTags.LOSES_NBT)) {
+			printingStack.setNbt(null);
+		}
 		modifyPrintingStack(world, printingStack);
 		getItems().set(1, printingStack);
 		// Add one to the tick offset since the sound will begin next tick
